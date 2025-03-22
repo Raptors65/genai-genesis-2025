@@ -4,11 +4,11 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
 
-declare global {
-  interface Window { handDetector: handPoseDetection.HandDetector; }
-}
+// declare global {
+//   interface Window { handDetector: handPoseDetection.HandDetector; }
+// }
 
-window.handDetector = window.handDetector || {};
+// (window as any).handDetector = (window as any).handDetector || {};
 
 const pianoEdges = [[[80, 340], [20, 420]], // left edge
                     [[560, 340], [620, 420]], // right edge
@@ -765,7 +765,8 @@ const HandDetection = () => {
             maxHands: 2
           }
         ).then(detector => {
-          window.handDetector = detector;
+          // eslint-disable-next-line
+          (window as any).handDetector = detector;
           setIsModelLoaded(true);
         });
       } catch (err) {
@@ -795,12 +796,14 @@ const HandDetection = () => {
 
   // Hand detection loop
   const detectHands = async () => {
-    if (!window.handDetector || !videoRef.current || !canvasRef.current) {
+    // eslint-disable-next-line
+    if (!(window as any).handDetector || !videoRef.current || !canvasRef.current) {
       return;
     }
 
     try {
-      const hands = await window.handDetector.estimateHands(videoRef.current);
+      // eslint-disable-next-line
+      const hands = await (window as any).handDetector.estimateHands(videoRef.current);
       
       // setLandmarks(hands);
       drawResults(hands);
