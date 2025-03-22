@@ -23,8 +23,34 @@ export default function TutorPage() {
   const [mode, setMode] = useState<"left" | "right" | "both">("both");
   const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([]);
-  const [generatedBassNotes, setGeneratedBassNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([]);
+  const [generatedBassNotes, setGeneratedBassNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([
+    { key: ["c/3"], duration: "q" },
+    { key: ["g/3"], duration: "q" },
+    { key: ["c/3"], duration: "h" },
+    { key: ["f/3"], duration: "q" },
+    { key: ["g/3"], duration: "q" },
+    { key: ["c/3"], duration: "h" },
+    { key: ["f/3"], duration: "w" },
+    { key: ["g/3"], duration: "8" },
+    { key: ["a/3"], duration: "8" },
+    { key: ["b/3"], duration: "8" },
+    { key: ["a/3"], duration: "8" },
+    { key: ["e/3"], duration: "h" }
+  ]);
+  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([
+    { key: ["c/4", "e/4" ], duration: "q" },  // C major chord
+    { key: ["d/4"], duration: "q" },  // D minor chord
+    { key: ["e/4", "g/4"], duration: "h" },  // E minor chord
+    { key: ["c/4"], duration: "h" },  // C major chord
+    { key: ["d/4"], duration: "q" },  // D minor chord
+    { key: ["e/4"], duration: "q" },  // E minor chord
+    { key: ["d/4", "f/4", "a/4"], duration: "w" },  // D minor chord
+    { key: ["d/4"], duration: "8" },  // D minor chord
+    { key: ["e/4"], duration: "8" },  // E minor chord
+    { key: ["e/4"], duration: "8" },  // E minor chord
+    { key: ["e/4"], duration: "8" },  // E minor chord
+    { key: ["e/4", "g/4", "b/4"], duration: "h" }   // E minor chord
+  ]);
   const startTime = useRef<number | null>(null);
 
   // Initialize startTime on component mount
@@ -44,15 +70,12 @@ export default function TutorPage() {
         const data = await response.json();
         // Reset existing notes
         setPlayedNotes([]);
+
+        const jsonData = JSON.parse(data[0].text);
         
-        // Set new generated notes if provided by the API
-        if (data.trebleNotes) {
-          setGeneratedTrebleNotes(data.trebleNotes);
-        }
-        
-        if (data.bassNotes) {
-          setGeneratedBassNotes(data.bassNotes);
-        }
+        setGeneratedTrebleNotes(jsonData.trebleNotes);
+        setGeneratedBassNotes(jsonData.bassNotes);
+        console.log(jsonData);
         
         // Reset timer
         startTime.current = new Date().getTime();
@@ -154,7 +177,7 @@ export default function TutorPage() {
                 <div className="flex items-center justify-between -mt-6 mb-2">
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">Practice mode:</span>
-                    <ToggleGroup type="single" value={mode} onValueChange={(value: string) => value && setMode(value as "left" | "right" | "both")}>
+                    <ToggleGroup type="single" value={mode} onValueChange={(value: string) => setMode(value as "left" | "right" | "both")}>
                       <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
                       <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
                       <ToggleGroupItem value="both">Both Hands</ToggleGroupItem>

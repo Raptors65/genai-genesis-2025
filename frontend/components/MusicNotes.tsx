@@ -13,8 +13,8 @@ interface Note {
 
 interface MusicNotesProps {
   tempo?: number;
-  trebleNotes?: Note[];
-  bassNotes?: Note[];
+  trebleNotes: Note[];
+  bassNotes: Note[];
   onStartNote: (note: string) => void;
   onEndNote: (note: string) => void;
   onStart: () => void;
@@ -24,34 +24,8 @@ interface MusicNotesProps {
 
 export function MusicNotes({ 
   tempo = 80, 
-  trebleNotes = [
-    { key: ["c/4", "e/4" ], duration: "q" },  // C major chord
-    { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4", "g/4"], duration: "h" },  // E minor chord
-    { key: ["c/4"], duration: "h" },  // C major chord
-    { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4"], duration: "q" },  // E minor chord
-    { key: ["d/4", "f/4", "a/4"], duration: "w" },  // D minor chord
-    { key: ["d/4"], duration: "8" },  // D minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4", "g/4", "b/4"], duration: "h" }   // E minor chord
-  ],
-  bassNotes = [
-    { key: ["c/3"], duration: "q" },
-    { key: ["g/3"], duration: "q" },
-    { key: ["c/3"], duration: "h" },
-    { key: ["f/3"], duration: "q" },
-    { key: ["g/3"], duration: "q" },
-    { key: ["c/3"], duration: "h" },
-    { key: ["f/3"], duration: "w" },
-    { key: ["g/3"], duration: "8" },
-    { key: ["a/3"], duration: "8" },
-    { key: ["b/3"], duration: "8" },
-    { key: ["a/3"], duration: "8" },
-    { key: ["e/3"], duration: "h" }
-  ],
+  trebleNotes,
+  bassNotes,
   onStartNote,
   onEndNote,
   onStart,
@@ -63,7 +37,6 @@ export function MusicNotes({
   const [isPlaying, setIsPlaying] = useState(false);
   const [highlightedTrebleIndex, setHighlightedTrebleIndex] = useState(0);
   const [highlightedBassIndex, setHighlightedBassIndex] = useState(0);
-
   // Convert note durations to beats
   const getBeats = (duration: string): number => {
     switch (duration) {
@@ -159,7 +132,7 @@ export function MusicNotes({
     const timeoutId = setTimeout(handleTrebleNote, trebleInterval);
 
     return () => clearTimeout(timeoutId);
-  }, [isPlaying, highlightedTrebleIndex, tempo]);
+  }, [isPlaying, highlightedTrebleIndex, trebleNotes, tempo]);
 
   // Handle bass clef playback
   useEffect(() => {
@@ -200,7 +173,7 @@ export function MusicNotes({
     const timeoutId = setTimeout(handleBassNote, bassInterval);
 
     return () => clearTimeout(timeoutId);
-  }, [isPlaying, highlightedBassIndex, tempo]);
+  }, [isPlaying, highlightedBassIndex, trebleNotes, tempo]);
 
   // Initialize VexFlow factory once
   useEffect(() => {
@@ -252,7 +225,7 @@ export function MusicNotes({
       let currentStaveNotes: StaveNote[] = [];
 
       // Create and draw staves and notes as we go
-      for (let i = 0; i < staveCount; i++) {
+      for (let i = 0; i < 4; i++) {
         const stave = factory.Stave({ 
           x: 10 + (i * (staveWidth)) + (i == 0 ? 0 : 50), 
           y: yPosition, 
@@ -346,7 +319,7 @@ export function MusicNotes({
         currentStaveNotes = [];
       }
     };
-
+    
     // Draw treble clef notes
     if (mode === "right" || mode === "both") {
       drawNotes(trebleNotes, highlightedTrebleIndex, 40, "treble");
@@ -357,7 +330,7 @@ export function MusicNotes({
       drawNotes(bassNotes, highlightedBassIndex, 160, "bass");
     }
     
-  }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex]);
+  }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex, mode]);
 
   return (
     <div className="w-full h-fit -mt-2 flex items-center justify-center gap-4">
