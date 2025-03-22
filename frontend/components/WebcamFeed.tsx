@@ -894,7 +894,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
       
       // Store complete key data including coordinates and note
       whiteKeyData.push({
-        x: leftTopX + 16, // Hotspot x
+        x: (leftTopX - leftBotX) * 0.8 + leftBotX + 16, // Hotspot x
         y: topY + 15,     // Hotspot y
         botX: leftBotX,
         botY: leftBotY,
@@ -905,7 +905,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
       
       // Also store just the hotspot info
       whiteKeyHotspots.push({
-        x: leftTopX + 16,
+        x: (leftTopX - leftBotX) * 0.8 + leftBotX + 16,
         y: topY + 15,
         note: note
       });
@@ -948,7 +948,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
         
         // Store complete key data including coordinates and note
         blackKeyData.push({
-          x: leftTopX - 9,
+          x: (leftTopX - leftBotX) * 0.6 + leftBotX - 9,
           y: leftTopY + 15,
           botX: leftBotX,
           botY: leftBotY,
@@ -959,7 +959,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
         
         // Also store just the hotspot info
         blackKeyHotspots.push({
-          x: leftTopX - 9,
+          x: (leftTopX - leftBotX) * 0.6 + leftBotX - 9,
           y: leftTopY + 15,
           note: note
         });
