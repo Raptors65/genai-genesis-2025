@@ -84,7 +84,7 @@ export function MusicNotes({
 
       onStartNote(notes[(highlightedNote + 1) % notes.length].key.replaceAll("/", "").toUpperCase());
       setHighlightedNote((prev) => (prev + 1) % notes.length);
-    }, 750 * getBeats(notes[highlightedNote].duration)); // 750ms * number of beats for current note
+    }, (60000 / tempo) * getBeats(notes[highlightedNote].duration)); // Convert tempo (BPM) to ms per beat
 
     return () => clearInterval(interval);
   }, [isPlaying, highlightedNote]);
