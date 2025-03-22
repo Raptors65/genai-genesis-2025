@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 
 interface Note {
-  key: string;
+  key: string | string[];  // Can be a single note or array of notes
   duration: "w" | "h" | "q" | "8" | "16"; // w=whole, h=half, q=quarter, 8=eighth, 16=sixteenth
 }
 
@@ -22,20 +22,18 @@ interface MusicNotesProps {
 export function MusicNotes({ 
   tempo = 80, 
   notes = [
-    { key: "c/4", duration: "q" },  // 1 beat
-    { key: "d/4", duration: "q" },  // 1 beat
-    { key: "e/4", duration: "h" },  // 2 beats
-    { key: "c/4", duration: "q" },  // 1 beat
-    { key: "d/4", duration: "q" },  // 1 beat
-    { key: "e/4", duration: "h" },  // 2 beats
-    { key: "c/4", duration: "q" },  // 1 beat
-    { key: "d/4", duration: "q" },  // 1 beat
-    { key: "e/4", duration: "h" },  // 2 beats
-    { key: "d/4", duration: "8" }, 
-    { key: "e/4", duration: "8" },
-    { key: "e/4", duration: "8" },
-    { key: "e/4", duration: "8" },
-    { key: "e/4", duration: "h" }
+    { key: ["c/4", "e/4" ], duration: "q" },  // C major chord
+    { key: ["d/4"], duration: "q" },  // D minor chord
+    { key: ["e/4", "g/4"], duration: "h" },  // E minor chord
+    { key: ["c/4"], duration: "q" },  // C major chord
+    { key: ["d/4"], duration: "q" },  // D minor chord
+    { key: ["e/4"], duration: "h" },  // E minor chord
+    { key: ["d/4", "f/4", "a/4"], duration: "w" },  // D minor chord
+    { key: ["d/4"], duration: "8" },  // D minor chord
+    { key: ["e/4"], duration: "8" },  // E minor chord
+    { key: ["e/4"], duration: "8" },  // E minor chord
+    { key: ["e/4"], duration: "8" },  // E minor chord
+    { key: ["e/4", "g/4", "b/4"], duration: "h" }   // E minor chord
   ],
   onStartNote,
   onEndNote,
@@ -66,7 +64,14 @@ export function MusicNotes({
         return false;
       } else {
         if (highlightedNote === 0) {
-          onStartNote(notes[highlightedNote].key.replaceAll("/", "").toUpperCase());
+          const currentNote = notes[highlightedNote].key;
+          if (Array.isArray(currentNote)) {
+            currentNote.forEach(note => {
+              onStartNote(note.replaceAll("/", "").toUpperCase());
+            });
+          } else {
+            onStartNote(currentNote.replaceAll("/", "").toUpperCase());
+          }
           onStart();
         }
         return true;
@@ -78,14 +83,29 @@ export function MusicNotes({
     if (!isPlaying) return;
 
     const interval = setInterval(() => {
-      onEndNote(notes[highlightedNote].key.replaceAll("/", "").toUpperCase());
+      const currentNote = notes[highlightedNote].key;
+      if (Array.isArray(currentNote)) {
+        currentNote.forEach(note => {
+          onEndNote(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        onEndNote(currentNote.replaceAll("/", "").toUpperCase());
+      }
+
       if (highlightedNote === notes.length - 1) {
         onEnd();
       }
 
-      onStartNote(notes[(highlightedNote + 1) % notes.length].key.replaceAll("/", "").toUpperCase());
+      const nextNote = notes[(highlightedNote + 1) % notes.length].key;
+      if (Array.isArray(nextNote)) {
+        nextNote.forEach(note => {
+          onStartNote(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        onStartNote(nextNote.replaceAll("/", "").toUpperCase());
+      }
       setHighlightedNote((prev) => (prev + 1) % notes.length);
-    }, (60000 / tempo) * getBeats(notes[highlightedNote].duration)); // Convert tempo (BPM) to ms per beat
+    }, (60000 / tempo) * getBeats(notes[highlightedNote].duration));
 
     return () => clearInterval(interval);
   }, [isPlaying, highlightedNote]);
@@ -166,7 +186,7 @@ export function MusicNotes({
         }
         
         const staveNote = factory.StaveNote({ 
-          keys: [note.key], 
+          keys: Array.isArray(note.key) ? note.key : [note.key], 
           duration: note.duration,
           autoStem: true
         });
