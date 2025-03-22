@@ -141,6 +141,555 @@ const notes = [
   },
 ]
 
+const notesPos = [
+  {
+      "note": "C5",
+      "polygon": [
+          [
+              80,
+              340
+          ],
+          [
+              20,
+              420
+          ],
+          [
+              60,
+              420
+          ],
+          [
+              112,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "B5",
+      "polygon": [
+          [
+              112,
+              340
+          ],
+          [
+              60,
+              420
+          ],
+          [
+              100,
+              420
+          ],
+          [
+              144,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "A5",
+      "polygon": [
+          [
+              144,
+              340
+          ],
+          [
+              100,
+              420
+          ],
+          [
+              140,
+              420
+          ],
+          [
+              176,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "G4",
+      "polygon": [
+          [
+              176,
+              340
+          ],
+          [
+              140,
+              420
+          ],
+          [
+              180,
+              420
+          ],
+          [
+              208,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "F4",
+      "polygon": [
+          [
+              208,
+              340
+          ],
+          [
+              180,
+              420
+          ],
+          [
+              220,
+              420
+          ],
+          [
+              240,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "E4",
+      "polygon": [
+          [
+              240,
+              340
+          ],
+          [
+              220,
+              420
+          ],
+          [
+              260,
+              420
+          ],
+          [
+              272,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "D4",
+      "polygon": [
+          [
+              272,
+              340
+          ],
+          [
+              260,
+              420
+          ],
+          [
+              300,
+              420
+          ],
+          [
+              304,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "C4",
+      "polygon": [
+          [
+              304,
+              340
+          ],
+          [
+              300,
+              420
+          ],
+          [
+              340,
+              420
+          ],
+          [
+              336,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "B4",
+      "polygon": [
+          [
+              336,
+              340
+          ],
+          [
+              340,
+              420
+          ],
+          [
+              380,
+              420
+          ],
+          [
+              368,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "A4",
+      "polygon": [
+          [
+              368,
+              340
+          ],
+          [
+              380,
+              420
+          ],
+          [
+              420,
+              420
+          ],
+          [
+              400,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "G3",
+      "polygon": [
+          [
+              400,
+              340
+          ],
+          [
+              420,
+              420
+          ],
+          [
+              460,
+              420
+          ],
+          [
+              432,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "F3",
+      "polygon": [
+          [
+              432,
+              340
+          ],
+          [
+              460,
+              420
+          ],
+          [
+              500,
+              420
+          ],
+          [
+              464,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "E3",
+      "polygon": [
+          [
+              464,
+              340
+          ],
+          [
+              500,
+              420
+          ],
+          [
+              540,
+              420
+          ],
+          [
+              496,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "D3",
+      "polygon": [
+          [
+              496,
+              340
+          ],
+          [
+              540,
+              420
+          ],
+          [
+              580,
+              420
+          ],
+          [
+              528,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "C3",
+      "polygon": [
+          [
+              528,
+              340
+          ],
+          [
+              580,
+              420
+          ],
+          [
+              620,
+              420
+          ],
+          [
+              560,
+              340
+          ]
+      ]
+  },
+  {
+      "note": "A5S",
+      "polygon": [
+          [
+              563,
+              380
+          ],
+          [
+              590,
+              420
+          ],
+          [
+              570,
+              420
+          ],
+          [
+              545,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "G4S",
+      "polygon": [
+          [
+              527,
+              380
+          ],
+          [
+              550,
+              420
+          ],
+          [
+              530,
+              420
+          ],
+          [
+              509,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "F4S",
+      "polygon": [
+          [
+              455,
+              380
+          ],
+          [
+              470,
+              420
+          ],
+          [
+              450,
+              420
+          ],
+          [
+              437,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "D4S",
+      "polygon": [
+          [
+              419,
+              380
+          ],
+          [
+              430,
+              420
+          ],
+          [
+              410,
+              420
+          ],
+          [
+              401,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "C4S",
+      "polygon": [
+          [
+              383,
+              380
+          ],
+          [
+              390,
+              420
+          ],
+          [
+              370,
+              420
+          ],
+          [
+              365,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "A4S",
+      "polygon": [
+          [
+              311,
+              380
+          ],
+          [
+              310,
+              420
+          ],
+          [
+              290,
+              420
+          ],
+          [
+              293,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "G3S",
+      "polygon": [
+          [
+              275,
+              380
+          ],
+          [
+              270,
+              420
+          ],
+          [
+              250,
+              420
+          ],
+          [
+              257,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "F3S",
+      "polygon": [
+          [
+              203,
+              380
+          ],
+          [
+              190,
+              420
+          ],
+          [
+              170,
+              420
+          ],
+          [
+              185,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "D3S",
+      "polygon": [
+          [
+              167,
+              380
+          ],
+          [
+              150,
+              420
+          ],
+          [
+              130,
+              420
+          ],
+          [
+              149,
+              380
+          ]
+      ]
+  },
+  {
+      "note": "C3S",
+      "polygon": [
+          [
+              131,
+              380
+          ],
+          [
+              110,
+              420
+          ],
+          [
+              90,
+              420
+          ],
+          [
+              113,
+              380
+          ]
+      ]
+  }
+].toReversed();
+
+const verticals = [0.03, 0.04, 0.02, 0.02, 0.02];
+
+function inside(point, vs) {
+  // ray-casting algorithm based on
+  // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
+  
+  var x = point[0], y = point[1];
+  
+  var inside = false;
+  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+      var xi = vs[i][0], yi = vs[i][1];
+      var xj = vs[j][0], yj = vs[j][1];
+      
+      var intersect = ((yi > y) != (yj > y))
+          && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+  }
+  
+  return inside;
+};
+
 const HandDetection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -148,6 +697,7 @@ const HandDetection = () => {
   const [isDetecting, setIsDetecting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState([]);
+  const notesBeingPlayed = useRef<string[]>([]);
 
   // Initialize webcam
   useEffect(() => {
@@ -289,6 +839,7 @@ const HandDetection = () => {
       ctx!.lineTo(leftBotX + 40, leftBotY);
       ctx!.lineTo(leftTopX + 32, leftTopY);
       ctx!.lineTo(leftTopX, leftTopY);
+
       ctx!.stroke();
     }
 
@@ -318,13 +869,14 @@ const HandDetection = () => {
         ctx!.fill();
       }
     }
+    // console.log(notes)
 
-    ctx!.fillStyle = "red";
-    for (const note of notes) {
-      ctx?.beginPath();
-      ctx!.arc(note.x, note.y, 5, 0, 2 * Math.PI);
-      ctx?.fill();
-    }
+    // ctx!.fillStyle = "red";
+    // for (const note of notes) {
+    //   ctx?.beginPath();
+    //   ctx!.arc(note.x, note.y, 5, 0, 2 * Math.PI);
+    //   ctx?.fill();
+    // }
     
     // Draw each detected hand
     hands.forEach(hand => {
@@ -381,23 +933,45 @@ const HandDetection = () => {
 
   const checkNotes = (hands: handPoseDetection.Hand[]) => {
     const fingers = hands.flatMap((hand) => hand.keypoints.map((k, i) => ({
-      keypoints: k, keypoints3D: hand.keypoints3D![i]
+      keypoints: k, keypoints3D: hand.keypoints3D![i], handedness: hand.handedness
     })).filter((_, i) => i !== 0 && i % 4 === 0));
 
-    if (hands.length > 0 && hands[0].keypoints3D) {
-      // console.log(hands[0]?.keypoints3D[8].y)
+    // if (hands.length > 0 && hands[0].keypoints3D) {
+    //   // console.log(hands[0]?.keypoints3D[8].y)
+    // }
+
+    // const playedNotes = notes.filter((note) => fingers.some((finger, i) => {
+    //   const dx = finger.keypoints.x - note.x;
+    //   const dy = finger.keypoints.y - note.y;
+    //   const sqDistance = dx*dx + dy*dy;
+    //   const vertical = finger.keypoints3D.y;
+
+    //   return sqDistance < 50 && vertical > 0.045;
+    // }))
+
+    const playedNotes = fingers.flatMap((finger, i) => {
+      const note = notesPos.find((note) => {
+        const vertical = finger.keypoints3D.y;
+
+        return inside([finger.keypoints.x, finger.keypoints.y], note.polygon) && vertical > verticals[i % 5];
+      });
+
+      return note === undefined ? [] : [{note, finger: finger.keypoints.name, hand: finger.handedness}];
+    });
+    
+    for (const note of notesBeingPlayed.current) {
+      if (playedNotes.every((playedNote) => playedNote.note.note !== note)) {
+        console.log(`stopped playing ${note}`);
+      }
     }
 
-    const playedNotes = notes.filter((note) => fingers.some((finger, i) => {
-      const dx = finger.keypoints.x - note.x;
-      const dy = finger.keypoints.y - note.y;
-      const sqDistance = dx*dx + dy*dy;
-      const vertical = finger.keypoints3D.y;
+    for (const playedNote of playedNotes) {
+      if (!notesBeingPlayed.current.includes(playedNote.note.note)) {
+        console.log(`started playing ${playedNote.note.note} with ${playedNote.finger} ${playedNote.hand}`)
+      }
+    }
 
-      return sqDistance < 50 && vertical > 0.045;
-    }))
-    
-    console.log(playedNotes.map((note) => note.note));
+    notesBeingPlayed.current = playedNotes.map((playedNote) => playedNote.note.note);
   };
 
   return (
