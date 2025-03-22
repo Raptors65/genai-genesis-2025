@@ -45,7 +45,7 @@ export function EmotionIcon({ emotion, size = 48, color = "#8E44AD", message }: 
             border-l-[15px] border-l-gray-200
             border-b-[15px] border-b-transparent">
           </div>
-          <p className="text-sm text-gray-700">{message}</p>
+          <p className="text-sm text-gray-700" dangerouslySetInnerHTML={{ __html: message }}></p>
         </div>
       )}
       <Icon size={size} color={color} />
