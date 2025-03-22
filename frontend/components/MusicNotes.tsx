@@ -14,8 +14,8 @@ interface Note {
 interface MusicNotesProps {
   tempo?: number;
   notes?: Note[];
-  onStartNote: (note: string) => void;
-  onEndNote: (note: string) => void;
+  onStartNote: (note: string, hand: string, finger: number) => void;
+  onEndNote: (note: string, hand: string, finger: number) => void;
   onStart: () => void;
   onEnd: () => void;
 }
@@ -59,26 +59,30 @@ export function MusicNotes({
   };
 
   const togglePlaying = () => {
-    setIsPlaying((prev) => {
-      if (prev) {
-        setHighlightedNote(0);
-        return false;
-      } else {
-        if (highlightedNote === 0) {
-          const currentNote = notes[highlightedNote].key;
-          if (Array.isArray(currentNote)) {
-            currentNote.forEach(note => {
-              onStartNote(note.replaceAll("/", "").toUpperCase());
-            });
-          } else {
-            onStartNote(currentNote.replaceAll("/", "").toUpperCase());
-          }
-          onStart();
-        }
-        return true;
-      }
-    });
+    setIsPlaying((prev) => !prev);
   }
+
+  // Handle starting the first note when playing begins
+  useEffect(() => {
+    if (isPlaying && highlightedNote === 0) {
+      const currentNote = notes[highlightedNote].key;
+      if (Array.isArray(currentNote)) {
+        currentNote.forEach(note => {
+          onStartNote(note.replaceAll("/", "").toUpperCase(), "Right", 1);
+        });
+      } else {
+        onStartNote(currentNote.replaceAll("/", "").toUpperCase(), "Right", 1);
+      }
+      onStart();
+    }
+  }, [isPlaying, highlightedNote]);
+
+  // Reset highlighted note when stopping
+  useEffect(() => {
+    if (!isPlaying) {
+      setHighlightedNote(0);
+    }
+  }, [isPlaying]);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -87,10 +91,10 @@ export function MusicNotes({
       const currentNote = notes[highlightedNote].key;
       if (Array.isArray(currentNote)) {
         currentNote.forEach(note => {
-          onEndNote(note.replaceAll("/", "").toUpperCase());
+          onEndNote(note.replaceAll("/", "").toUpperCase(), "Right", 1);
         });
       } else {
-        onEndNote(currentNote.replaceAll("/", "").toUpperCase());
+        onEndNote(currentNote.replaceAll("/", "").toUpperCase(), "Right", 1);
       }
 
       if (highlightedNote === notes.length - 1) {
@@ -100,10 +104,10 @@ export function MusicNotes({
       const nextNote = notes[(highlightedNote + 1) % notes.length].key;
       if (Array.isArray(nextNote)) {
         nextNote.forEach(note => {
-          onStartNote(note.replaceAll("/", "").toUpperCase());
+          onStartNote(note.replaceAll("/", "").toUpperCase(), "Right", 1);
         });
       } else {
-        onStartNote(nextNote.replaceAll("/", "").toUpperCase());
+          onStartNote(nextNote.replaceAll("/", "").toUpperCase(), "Right", 1);
       }
       setHighlightedNote((prev) => (prev + 1) % notes.length);
     }, (60000 / tempo) * getBeats(notes[highlightedNote].duration));
