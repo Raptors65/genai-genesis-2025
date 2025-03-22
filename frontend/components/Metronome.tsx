@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as Switch from "@radix-ui/react-switch";
+import { Slider, Box } from "@mui/material";
 
 interface MetronomeProps {
   tempo: number;
@@ -9,9 +10,17 @@ interface MetronomeProps {
   enabled: boolean;
   onTick?: () => void;
   onToggle?: (enabled: boolean) => void;
+  onTempoChange?: (tempo: number) => void;
 }
 
-export function Metronome({ tempo, isPlaying, enabled, onTick, onToggle }: MetronomeProps) {
+export function Metronome({ 
+  tempo, 
+  isPlaying, 
+  enabled, 
+  onTick, 
+  onToggle,
+  onTempoChange
+}: MetronomeProps) {
   const [isTicking, setIsTicking] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -76,17 +85,17 @@ export function Metronome({ tempo, isPlaying, enabled, onTick, onToggle }: Metro
     }
   };
 
+  // Handle tempo slider change
+  const handleTempoChange = (_event: Event, value: number | number[]) => {
+    if (onTempoChange && typeof value === 'number') {
+      onTempoChange(value);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center gap-2">
-      <div
-        className={`w-8 h-8 rounded-full ${
-          isTicking ? "bg-[#F39C12]" : "bg-gray-300"
-        } transition-colors duration-200`}
-      />
-      <p className="text-sm text-gray-600">{tempo} BPM</p>
-      
       {/* Sliding On/Off Switch */}
-      <div className="flex items-center gap-2 mt-2">
+      <div className="flex items-center gap-2 mb-1">
         <label htmlFor="metronome-switch" className="text-sm text-gray-600">
           {enabled ? "On" : "Off"}
         </label>
@@ -99,6 +108,38 @@ export function Metronome({ tempo, isPlaying, enabled, onTick, onToggle }: Metro
           <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
         </Switch.Root>
       </div>
+      
+      <div
+        className={`w-8 h-8 rounded-full ${
+          isTicking ? "bg-[#F39C12]" : "bg-gray-300"
+        } transition-colors duration-200`}
+      />
+      <p className="text-sm text-gray-600">{tempo} BPM</p>
+      
+      {/* Tempo Slider */}
+      <Box sx={{ width: 140, mt: 1 }}>
+        <Slider
+          aria-label="Metronome Speed"
+          value={tempo}
+          onChange={handleTempoChange}
+          valueLabelDisplay="auto"
+          step={10}
+          marks
+          min={40}
+          max={180}
+          size="small"
+          sx={{
+            color: '#F39C12',
+            '& .MuiSlider-thumb': {
+              width: 16,
+              height: 16,
+            },
+            '& .MuiSlider-valueLabel': {
+              backgroundColor: '#F39C12',
+            }
+          }}
+        />
+      </Box>
     </div>
   );
 }

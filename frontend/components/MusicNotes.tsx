@@ -62,6 +62,7 @@ export function MusicNotes({
   const factoryRef = useRef<Factory | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [metronomeEnabled, setMetronomeEnabled] = useState(false);
+  const [currentTempo, setCurrentTempo] = useState(tempo);
   const [highlightedTrebleIndex, setHighlightedTrebleIndex] = useState(0);
   const [highlightedBassIndex, setHighlightedBassIndex] = useState(0);
 
@@ -155,12 +156,12 @@ export function MusicNotes({
       }
     };
 
-    // Set up interval for treble notes
-    const trebleInterval = (60000 / tempo) * getBeats(trebleNotes[highlightedTrebleIndex].duration);
+    // Set up interval for treble notes - using currentTempo instead of tempo
+    const trebleInterval = (60000 / currentTempo) * getBeats(trebleNotes[highlightedTrebleIndex].duration);
     const timeoutId = setTimeout(handleTrebleNote, trebleInterval);
 
     return () => clearTimeout(timeoutId);
-  }, [isPlaying, highlightedTrebleIndex, tempo]);
+  }, [isPlaying, highlightedTrebleIndex, currentTempo]);
 
   // Handle bass clef playback
   useEffect(() => {
@@ -196,12 +197,12 @@ export function MusicNotes({
       setHighlightedBassIndex(nextBassIndex);
     };
 
-    // Set up interval for bass notes
-    const bassInterval = (60000 / tempo) * getBeats(bassNotes[highlightedBassIndex].duration);
+    // Set up interval for bass notes - using currentTempo instead of tempo
+    const bassInterval = (60000 / currentTempo) * getBeats(bassNotes[highlightedBassIndex].duration);
     const timeoutId = setTimeout(handleBassNote, bassInterval);
 
     return () => clearTimeout(timeoutId);
-  }, [isPlaying, highlightedBassIndex, tempo]);
+  }, [isPlaying, highlightedBassIndex, currentTempo]);
 
   // Initialize VexFlow factory once
   useEffect(() => {
@@ -363,11 +364,14 @@ export function MusicNotes({
   return (
     <div className="w-full h-fit -mt-2 flex items-center justify-center gap-4">
       <Metronome 
-        tempo={tempo} 
+        tempo={currentTempo} 
         isPlaying={isPlaying} 
         enabled={metronomeEnabled}
         onToggle={(enabled) => {
           setMetronomeEnabled(enabled);
+        }}
+        onTempoChange={(newTempo) => {
+          setCurrentTempo(newTempo);
         }}
       />
       <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px', height: '300px' }} />
