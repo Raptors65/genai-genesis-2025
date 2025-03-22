@@ -4,7 +4,9 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { EmotionIcon } from "@/components/EmotionIcon";
 import { MusicNotes } from "@/components/MusicNotes";
 import HandDetection from "@/components/WebcamFeed";
-import { useCallback, useRef, useState } from "react";
+import { NoteDisplay } from "@/components/NoteDisplay";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export type Note = {
   note: string;
@@ -18,22 +20,45 @@ export default function TutorPage() {
   const [message, setMessage] = useState("");
   const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
   const [expectedNotes, setExpectedNotes] = useState<Note[]>([]);
+  const [mode, setMode] = useState<"left" | "right" | "both">("both");
+  const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(null);
   const startTime = useRef<number | null>(null);
 
-  const handleStartNotePlay = useCallback((note: string, finger: string, hand: string) => {
-    console.log(`Started playing ${note} using ${hand} ${finger}`);
-    if (startTime.current === null) return;
+  // Initialize startTime on component mount
+  useEffect(() => {
+    startTime.current = new Date().getTime();
+    console.log("startTime initialized:", startTime.current);
+  }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleStartNotePlay = useCallback((note: string, _finger: string, _hand: string) => {
+    console.log("Note played:", note);
+    // Always set currentPlayedNote regardless of startTime
+    setCurrentPlayedNote(note);
+    
+    if (startTime.current === null) {
+      console.log("startTime was null, initializing it");
+      startTime.current = new Date().getTime();
+    }
+    
     setPlayedNotes((prev) => [...prev, { 
       note: note, 
       startTime: (new Date().getTime() - startTime.current!) / 1000,
       hand: hand,
       finger: parseInt(finger)
     }]);
-  }, [playedNotes, startTime.current]);
+  }, []);
 
-  const handleEndNotePlay = useCallback((note: string, finger: string, hand: string) => {
-    console.log(`Stopped playing ${note} using ${hand} ${finger}`);
-    if (startTime.current === null) return;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleEndNotePlay = useCallback((note: string, _finger: string, _hand: string) => {
+    console.log("Note ended:", note);
+    setCurrentPlayedNote(null);
+    
+    if (startTime.current === null) {
+      console.log("startTime was null in endNotePlay");
+      return;
+    }
+    
     setPlayedNotes((prev) => {
       const index = prev.findLastIndex((prevNote) => prevNote.note === note);
       if (index === -1) return prev;
@@ -44,7 +69,7 @@ export default function TutorPage() {
         finger: parseInt(finger)
       }, ...prev.slice(index + 1)]
     });
-  }, [playedNotes, startTime.current]);
+  }, []);
 
   const handleStartExpectedNote = useCallback((note: string, hand: string, finger: number) => {
     console.log(`Expecting ${note} using ${hand} ${finger}`);
@@ -55,7 +80,7 @@ export default function TutorPage() {
       hand: hand,
       finger: finger
     }]);
-  }, [expectedNotes, startTime.current]);
+  }, []);
 
   const handleEndExpectedNote = useCallback((note: string, hand: string, finger: number) => {
     if (startTime.current === null) return;
@@ -69,15 +94,16 @@ export default function TutorPage() {
         finger: finger
       }, ...prev.slice(index + 1)]
     });
-  }, [expectedNotes, startTime]);
+  }, []);
 
   const handleStart = () => {
     startTime.current = new Date().getTime();
+    console.log("handleStart called, startTime set to:", startTime.current);
   };
 
   const handleEnd = useCallback(async () => {
-    console.log(expectedNotes);
-    console.log(playedNotes);
+    console.log("handleEnd", expectedNotes, playedNotes);
+
     fetch('/api/get-feedback', {
       method: 'POST',
       headers: {
@@ -105,27 +131,50 @@ export default function TutorPage() {
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-white">
-      <div className="container mx-auto px-4 h-full flex flex-col">
-        {/* Top section - 25% height */}
-        <div className="h-[30%] bg-white">
-          <div className="bg-white rounded-lg m-4 p-4">
-            <MusicNotes onStartNote={handleStartExpectedNote} onEndNote={handleEndExpectedNote} onStart={handleStart} onEnd={handleEnd} />
-          </div>
-        </div>
-        
-        {/* Bottom section - 75% height */}
-        <div className="h-[70%] bg-white relative">
-          <div className="bg-white rounded-lg m-4 p-4">
-            <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
-          </div>
-          <div className="absolute top-4 right-8">
-            <EmotionIcon 
-              emotion="sad" 
-              size={48} 
-              message={message}
-            />
-          </div>
-        </div>
+      <div className="container mx-auto px-4 h-full">
+        <ResizablePanelGroup direction="vertical" className="h-full">
+          <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
+            <div className="h-full bg-white">
+              <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
+                <div className="flex items-center space-x-2 -mt-6 mb-2">
+                  <span className="font-medium">Practice mode:</span>
+                  <ToggleGroup type="single" value={mode} onValueChange={(value: string) => value && setMode(value as "left" | "right" | "both")}>
+                    <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
+                    <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
+                    <ToggleGroupItem value="both">Both Hands</ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <MusicNotes onStartNote={handleStartExpectedNote} mode={mode} onEndNote={handleEndExpectedNote} onStart={handleStart} onEnd={handleEnd} />
+              </div>
+            </div>
+          </ResizablePanel>
+          <ResizableHandle/>
+          <ResizablePanel defaultSize={67}>
+            <div className="h-full bg-white relative">
+              <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
+                  <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] flex flex-col justify-center">
+                    <h3 className="mb-4 text-lg font-medium">Currently Played Note</h3>
+                    <NoteDisplay currentNote={currentPlayedNote} />
+                  </div>
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel defaultSize={70}>
+                  <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
+                    <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+              <div className="absolute top-4 right-8">
+                <EmotionIcon 
+                  emotion="sad" 
+                  size={48} 
+                  message={message}
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );
