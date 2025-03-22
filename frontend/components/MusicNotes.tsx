@@ -8,6 +8,7 @@ import { Play, Pause } from "lucide-react";
 interface Note {
   key: string | string[];  // Can be a single note or array of notes
   duration: "w" | "h" | "q" | "8" | "16"; // w=whole, h=half, q=quarter, 8=eighth, 16=sixteenth
+  fingering?: string | string[];  // Optional fingering for each note
 }
 
 interface MusicNotesProps {
@@ -22,18 +23,18 @@ interface MusicNotesProps {
 export function MusicNotes({ 
   tempo = 80, 
   notes = [
-    { key: ["c/4", "e/4" ], duration: "q" },  // C major chord
-    { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4", "g/4"], duration: "h" },  // E minor chord
-    { key: ["c/4"], duration: "q" },  // C major chord
-    { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4"], duration: "h" },  // E minor chord
-    { key: ["d/4", "f/4", "a/4"], duration: "w" },  // D minor chord
-    { key: ["d/4"], duration: "8" },  // D minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4", "g/4", "b/4"], duration: "h" }   // E minor chord
+    { key: ["c/4", "e/4"], duration: "q", fingering: ["1", "3"] },  // C major chord
+    { key: ["d/4"], duration: "q", fingering: "2" },  // D minor chord
+    { key: ["e/4", "g/4"], duration: "h", fingering: ["3", "5"] },  // E minor chord
+    { key: ["c/4"], duration: "q", fingering: "1" },  // C major chord
+    { key: ["d/4"], duration: "q", fingering: "2" },  // D minor chord
+    { key: ["e/4"], duration: "h", fingering: "3" },  // E minor chord
+    { key: ["d/4", "f/4", "a/4"], duration: "w", fingering: ["2", "4", "5"] },  // D minor chord
+    { key: ["d/4"], duration: "8", fingering: "2" },  // D minor chord
+    { key: ["e/4"], duration: "8", fingering: "3" },  // E minor chord
+    { key: ["e/4"], duration: "8", fingering: "3" },  // E minor chord
+    { key: ["e/4"], duration: "8", fingering: "3" },  // E minor chord
+    { key: ["e/4", "g/4", "b/4"], duration: "h", fingering: ["1", "3", "5"] }   // E minor chord
   ],
   onStartNote,
   onEndNote,
@@ -190,6 +191,26 @@ export function MusicNotes({
           duration: note.duration,
           autoStem: true
         });
+        
+        // Add fingering annotations if provided
+        if (note.fingering) {
+          if (Array.isArray(note.key)) {
+            // For chords, add fingering to each note
+            note.key.forEach((_, index) => {
+              const fingering = Array.isArray(note.fingering) ? note.fingering[index] : note.fingering;
+              staveNote.addModifier(factory.Annotation({ 
+                text: fingering,
+                vJustify: "top"  // Position above the note
+              }), index);
+            });
+          } else {
+            // For single notes
+            staveNote.addModifier(factory.Annotation({ 
+              text: Array.isArray(note.fingering) ? note.fingering[0] : note.fingering,
+              vJustify: "top"  // Position above the note
+            }));
+          }
+        }
         
         // Remove flags from eighth notes and shorter durations
         if (note.duration === "8" || note.duration === "16") {

@@ -1293,7 +1293,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
 
   return (
     <div className="flex justify-center items-center">
-      <div className="relative mb-4">
+      <div className="relative mb-4 border-2 rounded-xl border-[#8E44AD]">
         <video 
             ref={videoRef} 
             className="rounded-lg bg-gray-100 scale-x-[-1]" 

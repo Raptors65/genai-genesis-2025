@@ -81,31 +81,27 @@ export default function TutorPage() {
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-white">
-      <div className="container mx-auto px-4 h-full">
-        <ResizablePanelGroup direction="vertical" className="h-full">
-          <ResizablePanel defaultSize={33} minSize={20} maxSize={50}>
-            <div className="h-full bg-white">
-              <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
-                <MusicNotes onStartNote={handleStartExpectedNote} onEndNote={handleEndExpectedNote} onStart={handleStart} onEnd={handleEnd} />
-              </div>
-            </div>
-          </ResizablePanel>
-          <ResizableHandle/>
-          <ResizablePanel defaultSize={67}>
-            <div className="h-full bg-white relative">
-              <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
-                <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
-              </div>
-              <div className="absolute top-4 right-8">
-                <EmotionIcon 
-                  emotion="sad" 
-                  size={48} 
-                  message={message}
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+      <div className="container mx-auto px-4 h-full flex flex-col">
+        {/* Top section - 25% height */}
+        <div className="h-[30%] bg-white">
+          <div className="bg-white rounded-lg m-4 p-4">
+            <MusicNotes onStartNote={handleStartExpectedNote} onEndNote={handleEndExpectedNote} onStart={handleStart} onEnd={handleEnd} />
+          </div>
+        </div>
+        
+        {/* Bottom section - 75% height */}
+        <div className="h-[70%] bg-white relative">
+          <div className="bg-white rounded-lg m-4 p-4">
+            <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
+          </div>
+          <div className="absolute top-4 right-8">
+            <EmotionIcon 
+              emotion="sad" 
+              size={48} 
+              message={message}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
