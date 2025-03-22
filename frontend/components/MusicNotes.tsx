@@ -61,6 +61,7 @@ export function MusicNotes({
   const containerRef = useRef<HTMLDivElement>(null);
   const factoryRef = useRef<Factory | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [metronomeEnabled, setMetronomeEnabled] = useState(false);
   const [highlightedTrebleIndex, setHighlightedTrebleIndex] = useState(0);
   const [highlightedBassIndex, setHighlightedBassIndex] = useState(0);
 
@@ -361,7 +362,14 @@ export function MusicNotes({
 
   return (
     <div className="w-full h-fit -mt-2 flex items-center justify-center gap-4">
-      <Metronome tempo={tempo} isPlaying={isPlaying} />
+      <Metronome 
+        tempo={tempo} 
+        isPlaying={isPlaying} 
+        enabled={metronomeEnabled}
+        onToggle={(enabled) => {
+          setMetronomeEnabled(enabled);
+        }}
+      />
       <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px', height: '300px' }} />
       <Button 
         onClick={togglePlaying}
