@@ -78,6 +78,14 @@ export function Metronome({
     };
   }, [tempo, isPlaying, enabled, onTick]);
 
+  // Get indicator color based on state
+  const getIndicatorColor = () => {
+    if (!isPlaying || !enabled) {
+      return "bg-gray-300"; // Gray when off
+    }
+    return isTicking ? "bg-[#F39C12]" : "bg-[#8e44ad]"; // Flash between orange and purple when on
+  };
+
   // Handle switch toggle
   const handleSwitchChange = (checked: boolean) => {
     if (onToggle) {
@@ -99,16 +107,16 @@ export function Metronome({
         id="metronome-switch"
         checked={enabled}
         onCheckedChange={handleSwitchChange}
-        className="w-[42px] h-[25px] bg-gray-300 rounded-full relative data-[state=checked]:bg-[#F39C12] outline-none cursor-pointer"
+        className={`w-[42px] h-[25px] rounded-full relative ${
+          enabled ? 'bg-[#F39C12]' : 'bg-gray-300'
+        } outline-none cursor-pointer`}
       >
         <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
       </Switch.Root>
       
       <div className="flex flex-col items-center">
         <div
-          className={`w-8 h-8 rounded-full ${
-            isTicking ? "bg-[#F39C12]" : "bg-gray-300"
-          } transition-colors duration-200 mb-1`}
+          className={`w-8 h-8 rounded-full ${getIndicatorColor()} transition-colors duration-200 mb-1`}
         />
         <p className="text-sm text-gray-600">{tempo} BPM</p>
       </div>
