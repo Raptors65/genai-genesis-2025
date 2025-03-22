@@ -3,8 +3,22 @@
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { EmotionIcon } from "@/components/EmotionIcon";
 import { MusicNotes } from "@/components/MusicNotes";
+import HandDetection from "@/components/WebcamFeed";
+import { useState } from "react";
 
 export default function TutorPage() {
+  const [message, setMessage] = useState("");
+
+  const handleStartNotePlay = (note: string, finger: string, hand: string) => {
+    console.log(`Started playing ${note} using ${hand} ${finger}`);
+    setMessage(note); // just to show that it can update the tutor msg from here
+  };
+
+  const handleEndNotePlay = (note: string, finger: string, hand: string) => {
+    console.log(`Stopped playing ${note} using ${hand} ${finger}`);
+    setMessage("");
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] bg-white">
       <div className="container mx-auto px-4 h-full">
@@ -21,14 +35,14 @@ export default function TutorPage() {
           <ResizablePanel defaultSize={67}>
             <div className="h-full bg-white relative">
               <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
-                <p className="text-gray-500">Tutor interface coming soon...</p>
+                <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
               </div>
               {/* Emotion Icon with Dialogue */}
               <div className="absolute top-4 right-8">
                 <EmotionIcon 
                   emotion="sad" 
                   size={48} 
-                  message="That note was a bit off. Let's try again!" 
+                  message={message}
                 />
               </div>
             </div>

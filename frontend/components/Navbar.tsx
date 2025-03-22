@@ -16,9 +16,9 @@ export function Navbar() {
           <Link href="/practice">
             <Button variant="ghost" className="text-[#F39C12] hover:text-[#F39C12]/80">Practice</Button>
           </Link>
-          <Link href="/tutor">
+          <a href="/tutor">
             <Button className="bg-[#F39C12] hover:bg-[#f39d12a7] text-white">Tutor</Button>
-          </Link>
+          </a>
         </div>
       </div>
     </nav>

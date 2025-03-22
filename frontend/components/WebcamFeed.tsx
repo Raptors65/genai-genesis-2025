@@ -10,6 +10,11 @@ import '@tensorflow/tfjs-backend-webgl';
 
 // (window as any).handDetector = (window as any).handDetector || {};
 
+interface HandDetectionProps {
+  onStartNotePlay: (note: string, finger: string, hand: string) => void;
+  onEndNotePlay: (note: string, finger: string, hand: string) => void;
+};
+
 const pianoEdges = [[[80, 340], [20, 420]], // left edge
                     [[560, 340], [620, 420]], // right edge
                     [[80, 340], [560, 340]], // top edge
@@ -678,7 +683,8 @@ const notesPos: {
   }
 ].toReversed();
 
-const verticals = [0.05, 0.06, 0.05, 0.05, 0.045];
+// const verticals = [0.05, 0.06, 0.05, 0.05, 0.045];
+const verticals = [0, 0, 0, 0, 0];
 
 function inside(point: [number, number], vs: [number, number][]) {
   // ray-casting algorithm based on
@@ -699,7 +705,7 @@ function inside(point: [number, number], vs: [number, number][]) {
   return inside;
 };
 
-const HandDetection = () => {
+const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
@@ -1006,13 +1012,13 @@ const HandDetection = () => {
     
     for (const note of notesBeingPlayed.current) {
       if (playedNotes.every((playedNote) => playedNote.note.note !== note.note.note)) {
-        console.log(`stopped playing ${note.note.note} with ${note.finger} ${note.hand}`);
+        onEndNotePlay(note.note.note, note.finger!, note.hand === "Left" ? "Right" : "Left");
       }
     }
 
     for (const playedNote of playedNotes) {
       if (!notesBeingPlayed.current.some((noteBeingPlayed) => noteBeingPlayed.note.note === playedNote.note.note)) {
-        console.log(`started playing ${playedNote.note.note} with ${playedNote.finger} ${playedNote.hand}`)
+        onStartNotePlay(playedNote.note.note, playedNote.finger!, playedNote.hand === "Left" ? "Right" : "Left");
       }
     }
 
