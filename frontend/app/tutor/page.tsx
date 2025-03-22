@@ -11,12 +11,12 @@ export default function TutorPage() {
 
   const handleStartNotePlay = (note: string, finger: string, hand: string) => {
     console.log(`Started playing ${note} using ${hand} ${finger}`);
-    setMessage(note); // just to show that it can update the tutor msg from here
+    // setMessage(note); // just to show that it can update the tutor msg from here
   };
 
   const handleEndNotePlay = (note: string, finger: string, hand: string) => {
     console.log(`Stopped playing ${note} using ${hand} ${finger}`);
-    setMessage("");
+    // setMessage("");
   };
 
   return (
