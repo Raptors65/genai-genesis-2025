@@ -706,7 +706,14 @@ const HandDetection = () => {
   // const [isDetecting, setIsDetecting] = useState(true);
   // const [error, setError] = useState<string | null>(null);
   // const [landmarks, setLandmarks] = useState<handPoseDetection.Hand[]>([]);
-  const notesBeingPlayed = useRef<string[]>([]);
+  const notesBeingPlayed = useRef<{
+    note: {
+        note: string;
+        polygon: [number, number][];
+    };
+    finger: string | undefined;
+    hand: "Left" | "Right";
+  }[]>([]);
 
   // Initialize webcam
   useEffect(() => {
@@ -856,7 +863,7 @@ const HandDetection = () => {
       const { note } = notesPos[notesPos.length - i - 1];
 
       // console.log(notesBeingPlayed.current, note === 'F4')
-      if (notesBeingPlayed.current.includes(note)) {
+      if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === note)) {
         // console.log("!")
         ctx!.fillStyle = 'red';
         ctx!.fill();
@@ -893,7 +900,7 @@ const HandDetection = () => {
         const { note } = notesPos[notesPos.length - noteI - 1];
 
         // console.log(notesBeingPlayed.current, note === 'F4')
-        if (notesBeingPlayed.current.includes(note)) {
+        if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === note)) {
           // console.log("!")
           ctx!.fillStyle = 'red';
           ctx!.fill();
@@ -995,18 +1002,18 @@ const HandDetection = () => {
     });
     
     for (const note of notesBeingPlayed.current) {
-      if (playedNotes.every((playedNote) => playedNote.note.note !== note)) {
-        console.log(`stopped playing ${note}`);
+      if (playedNotes.every((playedNote) => playedNote.note.note !== note.note.note)) {
+        console.log(`stopped playing ${note.note.note} with ${note.finger} ${note.hand}`);
       }
     }
 
     for (const playedNote of playedNotes) {
-      if (!notesBeingPlayed.current.includes(playedNote.note.note)) {
+      if (!notesBeingPlayed.current.some((noteBeingPlayed) => noteBeingPlayed.note.note === playedNote.note.note)) {
         console.log(`started playing ${playedNote.note.note} with ${playedNote.finger} ${playedNote.hand}`)
       }
     }
 
-    notesBeingPlayed.current = playedNotes.map((playedNote) => playedNote.note.note);
+    notesBeingPlayed.current = playedNotes.map((playedNote) => playedNote);
   };
 
   return (
