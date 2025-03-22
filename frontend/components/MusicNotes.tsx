@@ -64,8 +64,10 @@ export function MusicNotes({
       if (prev) {
         return false;
       } else {
-        onStartNote(notes[highlightedNote].key.replaceAll("/", "").toUpperCase());
-        onStart();
+        if (highlightedNote === 0) {
+          onStartNote(notes[highlightedNote].key.replaceAll("/", "").toUpperCase());
+          onStart();
+        }
         return true;
       }
     });
