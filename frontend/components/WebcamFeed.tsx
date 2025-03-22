@@ -4,11 +4,148 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
 
+const pianoEdges = [[[80, 340], [20, 420]], // left edge
+                    [[560, 340], [620, 420]], // right edge
+                    [[80, 340], [560, 340]], // top edge
+                    [[20, 420], [620, 420]] // bottom edge
+                  ];
+const blackKeyHeightRatio = 0.5;
+const topY = pianoEdges[0][0][1];
+const botY = pianoEdges[0][1][1];
+
+const notes = [
+  {
+    x: 558, // width 34
+    y: 360,
+    note: "C3"
+  },
+  {
+    x: 567, // width 38
+    y: 400,
+    note: "C3F"
+  },
+  {
+    x: 524,
+    y: 360,
+    note: "D3"
+  },
+  {
+    x: 529,
+    y: 400,
+    note: "D3F"
+  },
+  {
+    x: 490,
+    y: 360,
+    note: "E3"
+  },
+  {
+    x: 456,
+    y: 360,
+    note: "F3"
+  },
+  {
+    x: 453,
+    y: 400,
+    note: "F3F"
+  },
+  {
+    x: 422,
+    y: 360,
+    note: "G3"
+  },
+  {
+    x: 415,
+    y: 400,
+    note: "G3F"
+  },
+  {
+    x: 388,
+    y: 360,
+    note: "A4"
+  },
+  {
+    x: 377,
+    y: 400,
+    note: "A4S"
+  },
+  {
+    x: 354,
+    y: 360,
+    note: "B4"
+  },
+  {
+    x: 320,
+    y: 360,
+    note: "C4"
+  },
+  {
+    x: 301,
+    y: 400,
+    note: "C4S"
+  },
+  {
+    x: 286,
+    y: 360,
+    note: "D4"
+  },
+  {
+    x: 263,
+    y: 400,
+    note: "D4S"
+  },
+  {
+    x: 252,
+    y: 360,
+    note: "E4"
+  },
+  {
+    x: 218,
+    y: 360,
+    note: "F4"
+  },
+  {
+    x: 187,
+    y: 400,
+    note: "F4S"
+  },
+  {
+    x: 184,
+    y: 360,
+    note: "G4"
+  },
+  {
+    x: 149,
+    y: 400,
+    note: "G4S"
+  },
+  {
+    x: 150,
+    y: 360,
+    note: "A4"
+  },
+  {
+    x: 111,
+    y: 400,
+    note: "A4S"
+  },
+  {
+    x: 116,
+    y: 360,
+    note: "B4"
+  },
+  {
+    x: 82,
+    y: 360,
+    note: "C4"
+  },
+]
+
 const HandDetection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
-  const [isDetecting, setIsDetecting] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState([]);
 
@@ -70,6 +207,12 @@ const HandDetection = () => {
     loadModel();
   }, []);
 
+  useEffect(() => {
+    if (isModelLoaded && videoRef.current) {
+      detectHands();
+    }
+  }, [isModelLoaded, videoRef.current])
+
   // Start/stop hand detection
   const toggleDetection = () => {
     if (isDetecting) {
@@ -89,15 +232,9 @@ const HandDetection = () => {
     try {
       const hands = await window.handDetector.estimateHands(videoRef.current);
       
-      if (hands.length > 0) {
-        setLandmarks(hands);
-        drawResults(hands);
-      } else {
-        // Clear canvas if no hands detected
-        const ctx = canvasRef.current!.getContext('2d');
-        ctx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-        setLandmarks([]);
-      }
+      setLandmarks(hands);
+      drawResults(hands);
+      checkNotes(hands);
     } catch (err) {
       console.error('Detection error:', err);
     }
@@ -107,18 +244,87 @@ const HandDetection = () => {
   };
 
   // Draw hand landmarks on canvas
-  const drawResults = (hands) => {
+  const drawResults = (hands: handPoseDetection.Hand[]) => {
     if (!canvasRef.current) return;
     
     const ctx = canvasRef.current.getContext('2d');
-    const videoWidth = videoRef.current.videoWidth;
-    const videoHeight = videoRef.current.videoHeight;
+    const videoWidth = videoRef.current!.videoWidth;
+    const videoHeight = videoRef.current!.videoHeight;
     
     canvasRef.current.width = videoWidth;
     canvasRef.current.height = videoHeight;
     
-    ctx.clearRect(0, 0, videoWidth, videoHeight);
+    ctx!.clearRect(0, 0, videoWidth, videoHeight);
+    ctx!.save();
+
     ctx.save();
+    ctx.scale(-1, 1); // Flip horizontally
+    ctx.translate(-videoWidth, 0);
+    
+    // Draw piano
+    ctx!.strokeStyle = 'white';
+    ctx!.lineWidth = 2;
+      
+    for (const [[startX, startY], [endX, endY]] of pianoEdges) {
+      ctx!.beginPath();
+      ctx!.moveTo(startX, startY);
+      ctx!.lineTo(endX, endY);
+      ctx!.stroke();
+    }
+
+    // draw 2 octaves
+
+    ctx!.strokeStyle = 'white';
+    ctx!.lineWidth = 1;
+    for (let i = 0; i < 15; i++) {
+      const leftBotX = i * 40 + 20;
+      const leftBotY = botY;
+
+      const leftTopX = i * 32 + 80;
+      const leftTopY = topY;
+
+      ctx!.beginPath();
+      ctx!.moveTo(leftTopX, leftTopY);
+      ctx!.lineTo(leftBotX, leftBotY);
+      ctx!.lineTo(leftBotX + 40, leftBotY);
+      ctx!.lineTo(leftTopX + 32, leftTopY);
+      ctx!.lineTo(leftTopX, leftTopY);
+      ctx!.stroke();
+    }
+
+
+    ctx!.strokeStyle = 'black';
+    ctx!.fillStyle = 'black';
+    for (let i = 0; i < 15; i++) {
+      if ([1, 2, 4, 5, 6].includes(i % 7)) {
+        const leftBotX = 620 - (i * 40 - 10);
+        const leftBotY = botY;
+
+        const leftTopX = 590 - (i * 36 - 9);
+        const leftTopY = (botY - topY) * blackKeyHeightRatio + topY;
+
+        // const leftBotX = Math.abs(i * botWhiteKeyWidth - i * topWhiteKeyWidth) + Math.min(i * botWhiteKeyWidth, i * topWhiteKeyWidth);
+        // const leftBotY = Math.abs(topY - botY) + Math.min(topY, botY);
+
+
+
+        ctx!.beginPath();
+        ctx!.moveTo(leftTopX, leftTopY);
+        ctx!.lineTo(leftBotX, leftBotY);
+        ctx!.lineTo(leftBotX - 20, leftBotY);
+        ctx!.lineTo(leftTopX - 18, leftTopY);
+        ctx!.lineTo(leftTopX, leftTopY);
+        ctx!.stroke();
+        ctx!.fill();
+      }
+    }
+
+    ctx!.fillStyle = "red";
+    for (const note of notes) {
+      ctx?.beginPath();
+      ctx!.arc(note.x, note.y, 5, 0, 2 * Math.PI);
+      ctx?.fill();
+    }
     
     // Draw each detected hand
     hands.forEach(hand => {
@@ -142,87 +348,74 @@ const HandDetection = () => {
       ];
       
       // Draw keypoints
-      for (let i = 0; i < keypoints.length; i++) {
+      for (let i = 4; i < keypoints.length; i += 4) {
         const { x, y } = keypoints[i];
         
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = i === 0 ? 'red' : 'blue'; // Wrist point in red, others in blue
-        ctx.fill();
+        ctx!.beginPath();
+        ctx!.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx!.fillStyle = i === 0 ? 'red' : 'blue'; // Wrist point in red, others in blue
+        ctx!.fill();
       }
       
       // Draw connections
-      ctx.strokeStyle = 'green';
-      ctx.lineWidth = 2;
+      ctx!.strokeStyle = 'green';
+      ctx!.lineWidth = 2;
       
-      for (const [i, j] of connections) {
-        const from = keypoints[i];
-        const to = keypoints[j];
+      // for (const [i, j] of connections) {
+      //   const from = keypoints[i];
+      //   const to = keypoints[j];
         
-        if (from && to) {
-          ctx.beginPath();
-          ctx.moveTo(from.x, from.y);
-          ctx.lineTo(to.x, to.y);
-          ctx.stroke();
-        }
-      }
+      //   if (from && to) {
+      //     ctx!.beginPath();
+      //     ctx!.moveTo(from.x, from.y);
+      //     ctx!.lineTo(to.x, to.y);
+      //     ctx!.stroke();
+      //   }
+      // }
     });
+
     
-    ctx.restore();
+    
+    ctx!.restore();
+  };
+
+  const checkNotes = (hands: handPoseDetection.Hand[]) => {
+    const fingers = hands.flatMap((hand) => hand.keypoints.map((k, i) => ({
+      keypoints: k, keypoints3D: hand.keypoints3D![i]
+    })).filter((_, i) => i !== 0 && i % 4 === 0));
+
+    if (hands.length > 0 && hands[0].keypoints3D) {
+      // console.log(hands[0]?.keypoints3D[8].y)
+    }
+
+    const playedNotes = notes.filter((note) => fingers.some((finger, i) => {
+      const dx = finger.keypoints.x - note.x;
+      const dy = finger.keypoints.y - note.y;
+      const sqDistance = dx*dx + dy*dy;
+      const vertical = finger.keypoints3D.y;
+
+      return sqDistance < 50 && vertical > 0.045;
+    }))
+    
+    console.log(playedNotes.map((note) => note.note));
   };
 
   return (
-    <div className="flex flex-col items-center p-4">
-      <h1 className="text-2xl font-bold mb-4">Hand Landmark Detection</h1>
-      
-      <div className="relative mb-4">
-        <video 
+    <div className="relative mb-4">
+      <video 
           ref={videoRef} 
-          className="rounded-lg bg-gray-100" 
+          className="rounded-lg bg-gray-100 scale-x-[-1]" 
           width="640" 
           height="480"
           muted
           playsInline
-        />
-        <canvas 
+      />
+      <canvas 
           ref={canvasRef} 
           className="absolute top-0 left-0 z-10" 
           width="640" 
           height="480"
-        />
-      </div>
-      
-      <div className="flex flex-col gap-4">
-        <button
-          onClick={toggleDetection}
-          disabled={!isModelLoaded}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:bg-gray-400"
-        >
-          {isDetecting ? 'Stop Detection' : 'Start Detection'}
-        </button>
-        
-        {error && (
-          <div className="p-2 bg-red-100 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
-        
-        {!isModelLoaded && !error && (
-          <div className="p-2 bg-yellow-100 text-yellow-700 rounded-md">
-            Loading model... Please wait.
-          </div>
-        )}
-        
-        {landmarks.length > 0 && (
-          <div className="p-2 bg-green-100 text-green-700 rounded-md">
-            Detected {landmarks.length} hand(s)
-          </div>
-        )}
-      </div>
-      
-      <div className="mt-4 text-gray-600 text-sm">
-        <p>Note: For best results, ensure good lighting and keep your hand clearly visible to the camera.</p>
-      </div>
+      />
     </div>
   );
 };
