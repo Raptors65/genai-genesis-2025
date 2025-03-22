@@ -54,7 +54,7 @@ export default function TutorPage() {
   };
 
   const handleEnd = useCallback(async () => {
-    const response = await fetch('/api/get-feedback', {
+    fetch('/api/get-feedback', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -63,15 +63,19 @@ export default function TutorPage() {
         expectedNotes,
         playedNotes
       })
+    }).then(async (response) => {
+      if (!response.ok) {
+        return;
+      }
+  
+      const data = await response.json();
+  
+      setMessage(data.response.content[0].text);
     });
+
+    setExpectedNotes([]);
+    setPlayedNotes([]);
     
-    if (!response.ok) {
-      return;
-    }
-
-    const data = await response.json();
-
-    setMessage(data.response.content[0].text);
   }, [expectedNotes, playedNotes]);
 
   return (
