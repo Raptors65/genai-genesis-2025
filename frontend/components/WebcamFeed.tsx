@@ -4,6 +4,12 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
 
+declare global {
+  interface Window { handDetector: handPoseDetection.HandDetector; }
+}
+
+window.handDetector = window.handDetector || {};
+
 const pianoEdges = [[[80, 340], [20, 420]], // left edge
                     [[560, 340], [620, 420]], // right edge
                     [[80, 340], [560, 340]], // top edge
@@ -13,135 +19,138 @@ const blackKeyHeightRatio = 0.5;
 const topY = pianoEdges[0][0][1];
 const botY = pianoEdges[0][1][1];
 
-const notes = [
-  {
-    x: 558, // width 34
-    y: 360,
-    note: "C3"
-  },
-  {
-    x: 567, // width 38
-    y: 400,
-    note: "C3F"
-  },
-  {
-    x: 524,
-    y: 360,
-    note: "D3"
-  },
-  {
-    x: 529,
-    y: 400,
-    note: "D3F"
-  },
-  {
-    x: 490,
-    y: 360,
-    note: "E3"
-  },
-  {
-    x: 456,
-    y: 360,
-    note: "F3"
-  },
-  {
-    x: 453,
-    y: 400,
-    note: "F3F"
-  },
-  {
-    x: 422,
-    y: 360,
-    note: "G3"
-  },
-  {
-    x: 415,
-    y: 400,
-    note: "G3F"
-  },
-  {
-    x: 388,
-    y: 360,
-    note: "A4"
-  },
-  {
-    x: 377,
-    y: 400,
-    note: "A4S"
-  },
-  {
-    x: 354,
-    y: 360,
-    note: "B4"
-  },
-  {
-    x: 320,
-    y: 360,
-    note: "C4"
-  },
-  {
-    x: 301,
-    y: 400,
-    note: "C4S"
-  },
-  {
-    x: 286,
-    y: 360,
-    note: "D4"
-  },
-  {
-    x: 263,
-    y: 400,
-    note: "D4S"
-  },
-  {
-    x: 252,
-    y: 360,
-    note: "E4"
-  },
-  {
-    x: 218,
-    y: 360,
-    note: "F4"
-  },
-  {
-    x: 187,
-    y: 400,
-    note: "F4S"
-  },
-  {
-    x: 184,
-    y: 360,
-    note: "G4"
-  },
-  {
-    x: 149,
-    y: 400,
-    note: "G4S"
-  },
-  {
-    x: 150,
-    y: 360,
-    note: "A4"
-  },
-  {
-    x: 111,
-    y: 400,
-    note: "A4S"
-  },
-  {
-    x: 116,
-    y: 360,
-    note: "B4"
-  },
-  {
-    x: 82,
-    y: 360,
-    note: "C4"
-  },
-]
+// const notes = [
+//   {
+//     x: 558, // width 34
+//     y: 360,
+//     note: "C3"
+//   },
+//   {
+//     x: 567, // width 38
+//     y: 400,
+//     note: "C3F"
+//   },
+//   {
+//     x: 524,
+//     y: 360,
+//     note: "D3"
+//   },
+//   {
+//     x: 529,
+//     y: 400,
+//     note: "D3F"
+//   },
+//   {
+//     x: 490,
+//     y: 360,
+//     note: "E3"
+//   },
+//   {
+//     x: 456,
+//     y: 360,
+//     note: "F3"
+//   },
+//   {
+//     x: 453,
+//     y: 400,
+//     note: "F3F"
+//   },
+//   {
+//     x: 422,
+//     y: 360,
+//     note: "G3"
+//   },
+//   {
+//     x: 415,
+//     y: 400,
+//     note: "G3F"
+//   },
+//   {
+//     x: 388,
+//     y: 360,
+//     note: "A4"
+//   },
+//   {
+//     x: 377,
+//     y: 400,
+//     note: "A4S"
+//   },
+//   {
+//     x: 354,
+//     y: 360,
+//     note: "B4"
+//   },
+//   {
+//     x: 320,
+//     y: 360,
+//     note: "C4"
+//   },
+//   {
+//     x: 301,
+//     y: 400,
+//     note: "C4S"
+//   },
+//   {
+//     x: 286,
+//     y: 360,
+//     note: "D4"
+//   },
+//   {
+//     x: 263,
+//     y: 400,
+//     note: "D4S"
+//   },
+//   {
+//     x: 252,
+//     y: 360,
+//     note: "E4"
+//   },
+//   {
+//     x: 218,
+//     y: 360,
+//     note: "F4"
+//   },
+//   {
+//     x: 187,
+//     y: 400,
+//     note: "F4S"
+//   },
+//   {
+//     x: 184,
+//     y: 360,
+//     note: "G4"
+//   },
+//   {
+//     x: 149,
+//     y: 400,
+//     note: "G4S"
+//   },
+//   {
+//     x: 150,
+//     y: 360,
+//     note: "A4"
+//   },
+//   {
+//     x: 111,
+//     y: 400,
+//     note: "A4S"
+//   },
+//   {
+//     x: 116,
+//     y: 360,
+//     note: "B4"
+//   },
+//   {
+//     x: 82,
+//     y: 360,
+//     note: "C4"
+//   },
+// ]
 
-const notesPos = [
+const notesPos: {
+  note: string;
+  polygon: [number, number][]
+}[] = [
   {
       "note": "C5",
       "polygon": [
@@ -161,7 +170,7 @@ const notesPos = [
               112,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "B5",
@@ -182,7 +191,7 @@ const notesPos = [
               144,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "A5",
@@ -203,7 +212,7 @@ const notesPos = [
               176,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "G4",
@@ -224,7 +233,7 @@ const notesPos = [
               208,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "F4",
@@ -245,7 +254,7 @@ const notesPos = [
               240,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "E4",
@@ -266,7 +275,7 @@ const notesPos = [
               272,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "D4",
@@ -287,7 +296,7 @@ const notesPos = [
               304,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "C4",
@@ -308,7 +317,7 @@ const notesPos = [
               336,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "B4",
@@ -329,7 +338,7 @@ const notesPos = [
               368,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "A4",
@@ -350,7 +359,7 @@ const notesPos = [
               400,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "G3",
@@ -371,7 +380,7 @@ const notesPos = [
               432,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "F3",
@@ -392,7 +401,7 @@ const notesPos = [
               464,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "E3",
@@ -413,7 +422,7 @@ const notesPos = [
               496,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "D3",
@@ -434,7 +443,7 @@ const notesPos = [
               528,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "C3",
@@ -455,7 +464,7 @@ const notesPos = [
               560,
               340
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "A5S",
@@ -476,7 +485,7 @@ const notesPos = [
               545,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "G4S",
@@ -497,7 +506,7 @@ const notesPos = [
               509,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "F4S",
@@ -518,7 +527,7 @@ const notesPos = [
               437,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "D4S",
@@ -539,7 +548,7 @@ const notesPos = [
               401,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "C4S",
@@ -560,7 +569,7 @@ const notesPos = [
               365,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "A4S",
@@ -581,7 +590,7 @@ const notesPos = [
               293,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "G3S",
@@ -602,7 +611,7 @@ const notesPos = [
               257,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "F3S",
@@ -623,7 +632,7 @@ const notesPos = [
               185,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "D3S",
@@ -644,7 +653,7 @@ const notesPos = [
               149,
               380
           ]
-      ]
+      ] as [number, number][]
   },
   {
       "note": "C3S",
@@ -665,24 +674,24 @@ const notesPos = [
               113,
               380
           ]
-      ]
+      ] as [number, number][]
   }
 ].toReversed();
 
-const verticals = [0.03, 0.04, 0.02, 0.02, 0.02];
+const verticals = [0.05, 0.06, 0.05, 0.05, 0.045];
 
-function inside(point, vs) {
+function inside(point: [number, number], vs: [number, number][]) {
   // ray-casting algorithm based on
   // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
   
-  var x = point[0], y = point[1];
+  const x = point[0], y = point[1];
   
-  var inside = false;
-  for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-      var xi = vs[i][0], yi = vs[i][1];
-      var xj = vs[j][0], yj = vs[j][1];
+  let inside = false;
+  for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+      const xi = vs[i][0], yi = vs[i][1];
+      const xj = vs[j][0], yj = vs[j][1];
       
-      var intersect = ((yi > y) != (yj > y))
+      const intersect = ((yi > y) != (yj > y))
           && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
       if (intersect) inside = !inside;
   }
@@ -694,16 +703,16 @@ const HandDetection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
-  const [isDetecting, setIsDetecting] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [landmarks, setLandmarks] = useState([]);
+  // const [isDetecting, setIsDetecting] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
+  // const [landmarks, setLandmarks] = useState<handPoseDetection.Hand[]>([]);
   const notesBeingPlayed = useRef<string[]>([]);
 
   // Initialize webcam
   useEffect(() => {
     async function setupCamera() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setError('Your browser does not support webcam access');
+        // setError('Your browser does not support webcam access');
         return;
       }
 
@@ -719,7 +728,8 @@ const HandDetection = () => {
           };
         }
       } catch (err) {
-        setError('Error accessing webcam: ' + err.message);
+        console.log(`Error accessing webcam: ${err}`)
+        // setError('Error accessing webcam: ' + err);
       }
     }
 
@@ -728,7 +738,9 @@ const HandDetection = () => {
     return () => {
       // Cleanup webcam stream
       if (videoRef.current && videoRef.current.srcObject) {
+        // @ts-expect-error getTracks does exist
         const tracks = videoRef.current.srcObject.getTracks();
+        // @ts-expect-error to deal with getTracks issue
         tracks.forEach(track => track.stop());
       }
     };
@@ -750,7 +762,8 @@ const HandDetection = () => {
           setIsModelLoaded(true);
         });
       } catch (err) {
-        setError('Error loading model: ' + err.message);
+        console.log(`Error loading model: ${err}`)
+        // setError('Error loading model: ' + err);
       }
     }
 
@@ -764,14 +777,14 @@ const HandDetection = () => {
   }, [isModelLoaded, videoRef.current])
 
   // Start/stop hand detection
-  const toggleDetection = () => {
-    if (isDetecting) {
-      setIsDetecting(false);
-    } else if (isModelLoaded && videoRef.current) {
-      setIsDetecting(true);
-      detectHands();
-    }
-  };
+  // const toggleDetection = () => {
+  //   if (isDetecting) {
+  //     setIsDetecting(false);
+  //   } else if (isModelLoaded && videoRef.current) {
+  //     setIsDetecting(true);
+  //     detectHands();
+  //   }
+  // };
 
   // Hand detection loop
   const detectHands = async () => {
@@ -782,7 +795,7 @@ const HandDetection = () => {
     try {
       const hands = await window.handDetector.estimateHands(videoRef.current);
       
-      setLandmarks(hands);
+      // setLandmarks(hands);
       drawResults(hands);
       checkNotes(hands);
     } catch (err) {
@@ -807,9 +820,9 @@ const HandDetection = () => {
     ctx!.clearRect(0, 0, videoWidth, videoHeight);
     ctx!.save();
 
-    ctx.save();
-    ctx.scale(-1, 1); // Flip horizontally
-    ctx.translate(-videoWidth, 0);
+    ctx!.save();
+    ctx!.scale(-1, 1); // Flip horizontally
+    ctx!.translate(-videoWidth, 0);
     
     // Draw piano
     ctx!.strokeStyle = 'white';
@@ -840,12 +853,22 @@ const HandDetection = () => {
       ctx!.lineTo(leftTopX + 32, leftTopY);
       ctx!.lineTo(leftTopX, leftTopY);
 
+      const { note } = notesPos[notesPos.length - i - 1];
+
+      // console.log(notesBeingPlayed.current, note === 'F4')
+      if (notesBeingPlayed.current.includes(note)) {
+        // console.log("!")
+        ctx!.fillStyle = 'red';
+        ctx!.fill();
+      }
+
       ctx!.stroke();
     }
 
 
     ctx!.strokeStyle = 'black';
     ctx!.fillStyle = 'black';
+    let noteI = 15;
     for (let i = 0; i < 15; i++) {
       if ([1, 2, 4, 5, 6].includes(i % 7)) {
         const leftBotX = 620 - (i * 40 - 10);
@@ -866,7 +889,19 @@ const HandDetection = () => {
         ctx!.lineTo(leftTopX - 18, leftTopY);
         ctx!.lineTo(leftTopX, leftTopY);
         ctx!.stroke();
-        ctx!.fill();
+
+        const { note } = notesPos[notesPos.length - noteI - 1];
+
+        // console.log(notesBeingPlayed.current, note === 'F4')
+        if (notesBeingPlayed.current.includes(note)) {
+          // console.log("!")
+          ctx!.fillStyle = 'red';
+          ctx!.fill();
+          ctx!.fillStyle = 'black';
+        } else {
+          ctx!.fill();
+        }
+        noteI++;
       }
     }
     // console.log(notes)
@@ -884,20 +919,20 @@ const HandDetection = () => {
       const keypoints = hand.keypoints;
       
       // Draw connections
-      const connections = [
-        // Thumb
-        [0, 1], [1, 2], [2, 3], [3, 4],
-        // Index finger
-        [0, 5], [5, 6], [6, 7], [7, 8],
-        // Middle finger
-        [0, 9], [9, 10], [10, 11], [11, 12],
-        // Ring finger
-        [0, 13], [13, 14], [14, 15], [15, 16],
-        // Pinky
-        [0, 17], [17, 18], [18, 19], [19, 20],
-        // Palm connections
-        [5, 9], [9, 13], [13, 17]
-      ];
+      // const connections = [
+      //   // Thumb
+      //   [0, 1], [1, 2], [2, 3], [3, 4],
+      //   // Index finger
+      //   [0, 5], [5, 6], [6, 7], [7, 8],
+      //   // Middle finger
+      //   [0, 9], [9, 10], [10, 11], [11, 12],
+      //   // Ring finger
+      //   [0, 13], [13, 14], [14, 15], [15, 16],
+      //   // Pinky
+      //   [0, 17], [17, 18], [18, 19], [19, 20],
+      //   // Palm connections
+      //   [5, 9], [9, 13], [13, 17]
+      // ];
       
       // Draw keypoints
       for (let i = 4; i < keypoints.length; i += 4) {
