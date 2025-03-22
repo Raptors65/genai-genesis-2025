@@ -62,6 +62,7 @@ export function MusicNotes({
   const togglePlaying = () => {
     setIsPlaying((prev) => {
       if (prev) {
+        setHighlightedNote(0);
         return false;
       } else {
         if (highlightedNote === 0) {

@@ -29,7 +29,7 @@ export default function TutorPage() {
     if (startTime.current === null) return;
     setPlayedNotes((prev) => {
       const index = prev.findLastIndex((prevNote) => prevNote.note === note);
-      if (index === -1) return;
+      if (index === -1) return prev;
       return [...prev.slice(0, index), { ...prev[index], duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime }, ...prev.slice(index + 1)]
     });
   }, [playedNotes, startTime.current]);

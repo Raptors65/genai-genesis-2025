@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
+import * as Soundfont from "soundfont-player";
 
 // Define the type for piano hotspots
 interface PianoHotspot {
@@ -192,7 +193,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "B5",
+      "note": "B4",
       "polygon": [
           [
               112,
@@ -213,7 +214,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "A5",
+      "note": "A4",
       "polygon": [
           [
               144,
@@ -339,7 +340,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "B4",
+      "note": "B3",
       "polygon": [
           [
               336,
@@ -360,7 +361,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "A4",
+      "note": "A3",
       "polygon": [
           [
               368,
@@ -486,7 +487,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "Bb5",
+      "note": "Bb4",
       "polygon": [
           [
               563,
@@ -507,7 +508,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "Ab5",
+      "note": "Ab4",
       "polygon": [
           [
               527,
@@ -591,7 +592,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "Bb4",
+      "note": "Bb3",
       "polygon": [
           [
               311,
@@ -612,7 +613,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "Ab4",
+      "note": "Ab3",
       "polygon": [
           [
               275,
@@ -724,6 +725,15 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const piano = useRef<Soundfont.Player | null>(null);
+  const ac = useRef<AudioContext | null>(null);
+  const handleStartNotePlay = useCallback((note: string, finger: string, hand: string) => {
+    if (piano.current) {
+      piano.current.play(note, ac.current!.currentTime);
+    }
+    onStartNotePlay(note, finger, hand);
+  }, [piano, onStartNotePlay]);
+  
   // const [isDetecting, setIsDetecting] = useState(true);
   // const [error, setError] = useState<string | null>(null);
   // const [landmarks, setLandmarks] = useState<handPoseDetection.Hand[]>([]);
@@ -769,6 +779,12 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
     }
 
     setupCamera();
+
+    ac.current = new (window.AudioContext || window.webkitAudioContext)();
+
+    Soundfont.instrument(ac.current!, "acoustic_grand_piano").then((instrument) => {
+      piano.current = instrument;
+    });
 
     return () => {
       // Cleanup webcam stream
@@ -1268,7 +1284,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
 
     for (const playedNote of playedNotes) {
       if (!notesBeingPlayed.current.some((noteBeingPlayed) => noteBeingPlayed.note.note === playedNote.note.note)) {
-        onStartNotePlay(playedNote.note.note, playedNote.finger!, playedNote.hand === "Left" ? "Right" : "Left");
+        handleStartNotePlay(playedNote.note.note, playedNote.finger!, playedNote.hand === "Left" ? "Right" : "Left");
       }
     }
 
