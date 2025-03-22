@@ -93,31 +93,28 @@ export function Metronome({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-2">
+    <div className="flex flex-col items-center justify-center gap-4">
       {/* Sliding On/Off Switch */}
-      <div className="flex items-center gap-2 mb-1">
-        <label htmlFor="metronome-switch" className="text-sm text-gray-600">
-          {enabled ? "On" : "Off"}
-        </label>
-        <Switch.Root
-          id="metronome-switch"
-          checked={enabled}
-          onCheckedChange={handleSwitchChange}
-          className="w-[42px] h-[25px] bg-gray-300 rounded-full relative data-[state=checked]:bg-[#F39C12] outline-none cursor-pointer"
-        >
-          <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
-        </Switch.Root>
+      <Switch.Root
+        id="metronome-switch"
+        checked={enabled}
+        onCheckedChange={handleSwitchChange}
+        className="w-[42px] h-[25px] bg-gray-300 rounded-full relative data-[state=checked]:bg-[#F39C12] outline-none cursor-pointer"
+      >
+        <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
+      </Switch.Root>
+      
+      <div className="flex flex-col items-center">
+        <div
+          className={`w-8 h-8 rounded-full ${
+            isTicking ? "bg-[#F39C12]" : "bg-gray-300"
+          } transition-colors duration-200 mb-1`}
+        />
+        <p className="text-sm text-gray-600">{tempo} BPM</p>
       </div>
       
-      <div
-        className={`w-8 h-8 rounded-full ${
-          isTicking ? "bg-[#F39C12]" : "bg-gray-300"
-        } transition-colors duration-200`}
-      />
-      <p className="text-sm text-gray-600">{tempo} BPM</p>
-      
       {/* Tempo Slider */}
-      <Box sx={{ width: 140, mt: 1 }}>
+      <Box sx={{ width: 140 }}>
         <Slider
           aria-label="Metronome Speed"
           value={tempo}
