@@ -7,6 +7,8 @@ import HandDetection from "@/components/WebcamFeed";
 import { NoteDisplay } from "@/components/NoteDisplay";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
+import { RefreshCcw } from "lucide-react";
 
 export type Note = {
   note: string;
@@ -20,6 +22,9 @@ export default function TutorPage() {
   const [expectedNotes, setExpectedNotes] = useState<Note[]>([]);
   const [mode, setMode] = useState<"left" | "right" | "both">("both");
   const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([]);
+  const [generatedBassNotes, setGeneratedBassNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([]);
   const startTime = useRef<number | null>(null);
 
   // Initialize startTime on component mount
@@ -27,6 +32,39 @@ export default function TutorPage() {
     startTime.current = new Date().getTime();
     console.log("startTime initialized:", startTime.current);
   }, []);
+
+  const handleGenerateMusic = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/generate-music', {
+        method: 'GET',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Reset existing notes
+        setPlayedNotes([]);
+        
+        // Set new generated notes if provided by the API
+        if (data.trebleNotes) {
+          setGeneratedTrebleNotes(data.trebleNotes);
+        }
+        
+        if (data.bassNotes) {
+          setGeneratedBassNotes(data.bassNotes);
+        }
+        
+        // Reset timer
+        startTime.current = new Date().getTime();
+      } else {
+        console.error('Failed to generate music');
+      }
+    } catch (error) {
+      console.error('Error generating music:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleStartNotePlay = useCallback((note: string, _finger: string, _hand: string) => {
@@ -113,15 +151,33 @@ export default function TutorPage() {
           <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
             <div className="h-full bg-white">
               <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
-                <div className="flex items-center space-x-2 -mt-6 mb-2">
-                  <span className="font-medium">Practice mode:</span>
-                  <ToggleGroup type="single" value={mode} onValueChange={(value: string) => value && setMode(value as "left" | "right" | "both")}>
-                    <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
-                    <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
-                    <ToggleGroupItem value="both">Both Hands</ToggleGroupItem>
-                  </ToggleGroup>
+                <div className="flex items-center justify-between -mt-6 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Practice mode:</span>
+                    <ToggleGroup type="single" value={mode} onValueChange={(value: string) => value && setMode(value as "left" | "right" | "both")}>
+                      <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
+                      <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
+                      <ToggleGroupItem value="both">Both Hands</ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                  <Button 
+                    onClick={handleGenerateMusic} 
+                    disabled={isGenerating}
+                    className="flex items-center gap-1"
+                  >
+                    {isGenerating && <RefreshCcw className="h-4 w-4 animate-spin" />}
+                    Generate New Music
+                  </Button>
                 </div>
-                <MusicNotes onStartNote={handleStartExpectedNote} mode={mode} onEndNote={handleEndExpectedNote} onStart={handleStart} onEnd={handleEnd} />
+                <MusicNotes 
+                  onStartNote={handleStartExpectedNote} 
+                  mode={mode} 
+                  onEndNote={handleEndExpectedNote} 
+                  onStart={handleStart} 
+                  onEnd={handleEnd}
+                  trebleNotes={generatedTrebleNotes.length > 0 ? generatedTrebleNotes : undefined}
+                  bassNotes={generatedBassNotes.length > 0 ? generatedBassNotes : undefined}
+                />
               </div>
             </div>
           </ResizablePanel>
