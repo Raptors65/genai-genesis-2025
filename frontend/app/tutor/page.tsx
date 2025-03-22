@@ -6,6 +6,7 @@ import { MusicNotes } from "@/components/MusicNotes";
 import HandDetection from "@/components/WebcamFeed";
 import { NoteDisplay } from "@/components/NoteDisplay";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export type Note = {
   note: string;
@@ -17,6 +18,7 @@ export default function TutorPage() {
   const [message, setMessage] = useState("");
   const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
   const [expectedNotes, setExpectedNotes] = useState<Note[]>([]);
+  const [mode, setMode] = useState<"left" | "right" | "both">("both");
   const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(null);
   const startTime = useRef<number | null>(null);
 
@@ -108,10 +110,18 @@ export default function TutorPage() {
     <div className="h-[calc(100vh-4rem)] bg-white">
       <div className="container mx-auto px-4 h-full">
         <ResizablePanelGroup direction="vertical" className="h-full">
-          <ResizablePanel defaultSize={33} minSize={20} maxSize={50}>
+          <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
             <div className="h-full bg-white">
               <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
-                <MusicNotes onStartNote={handleStartExpectedNote} onEndNote={handleEndExpectedNote} onStart={handleStart} onEnd={handleEnd} />
+                <div className="flex items-center space-x-2 -mt-6 mb-2">
+                  <span className="font-medium">Practice mode:</span>
+                  <ToggleGroup type="single" value={mode} onValueChange={(value: string) => value && setMode(value as "left" | "right" | "both")}>
+                    <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
+                    <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
+                    <ToggleGroupItem value="both">Both Hands</ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <MusicNotes onStartNote={handleStartExpectedNote} mode={mode} onEndNote={handleEndExpectedNote} onStart={handleStart} onEnd={handleEnd} />
               </div>
             </div>
           </ResizablePanel>
