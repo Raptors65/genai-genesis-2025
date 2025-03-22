@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
+import * as Soundfont from "soundfont-player";
 
 // Define the type for piano hotspots
 interface PianoHotspot {
@@ -192,7 +193,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "B5",
+      "note": "B4",
       "polygon": [
           [
               112,
@@ -213,7 +214,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "A5",
+      "note": "A4",
       "polygon": [
           [
               144,
@@ -339,7 +340,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "B4",
+      "note": "B3",
       "polygon": [
           [
               336,
@@ -360,7 +361,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "A4",
+      "note": "A3",
       "polygon": [
           [
               368,
@@ -486,7 +487,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "Bb5",
+      "note": "Bb4",
       "polygon": [
           [
               563,
@@ -507,7 +508,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "Ab5",
+      "note": "Ab4",
       "polygon": [
           [
               527,
@@ -591,7 +592,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "Bb4",
+      "note": "Bb3",
       "polygon": [
           [
               311,
@@ -612,7 +613,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "Ab4",
+      "note": "Ab3",
       "polygon": [
           [
               275,
@@ -697,8 +698,8 @@ const notesPos: {
   }
 ].toReversed();
 
-// const verticals = [0.05, 0.06, 0.05, 0.05, 0.045];
-const verticals = [0, 0, 0, 0, 0];
+// Remove or comment out verticals since we're not using it anymore
+// const verticals = [0, 0, 0, 0, 0];
 
 // We're not using this function anymore since we switched to hotspot detection
 // function inside(point: [number, number], vs: [number, number][]) {
@@ -724,6 +725,15 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const piano = useRef<Soundfont.Player | null>(null);
+  const ac = useRef<AudioContext | null>(null);
+  const handleStartNotePlay = useCallback((note: string, finger: string, hand: string) => {
+    if (piano.current) {
+      piano.current.play(note, ac.current!.currentTime);
+    }
+    onStartNotePlay(note, finger, hand);
+  }, [piano, onStartNotePlay]);
+  
   // const [isDetecting, setIsDetecting] = useState(true);
   // const [error, setError] = useState<string | null>(null);
   // const [landmarks, setLandmarks] = useState<handPoseDetection.Hand[]>([]);
@@ -735,6 +745,13 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
     finger: string | undefined;
     hand: "Left" | "Right";
   }[]>([]);
+  
+  // Add smoothing for finger positions
+  const previousFingerPositions = useRef<{ [key: string]: { x: number, y: number, z: number }[] }>({});
+  
+  // MediaPipe hand landmark indices for fingertips
+  const FINGERTIP_INDICES = [4, 8, 12, 16, 20]; // thumb, index, middle, ring, pinky
+  const FINGER_NAMES = ["thumb", "index", "middle", "ring", "pinky"];
 
   // Initialize webcam
   useEffect(() => {
@@ -763,6 +780,12 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
 
     setupCamera();
 
+    ac.current = new (window.AudioContext || window.webkitAudioContext)();
+
+    Soundfont.instrument(ac.current!, "acoustic_grand_piano").then((instrument) => {
+      piano.current = instrument;
+    });
+
     return () => {
       // Cleanup webcam stream
       if (videoRef.current && videoRef.current.srcObject) {
@@ -781,8 +804,8 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
         await handPoseDetection.createDetector(
           handPoseDetection.SupportedModels.MediaPipeHands, 
           {
-            runtime: 'tfjs',
-            modelType: 'full',
+            runtime: 'tfjs', // Using TensorFlow.js runtime
+            modelType: 'full', // Use the full model for better accuracy
             maxHands: 2
           }
         ).then(detector => {
@@ -815,28 +838,6 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
   //   }
   // };
 
-  // Hand detection loop
-  const detectHands = async () => {
-    // eslint-disable-next-line
-    if (!(window as any).handDetector || !videoRef.current || !canvasRef.current) {
-      return;
-    }
-
-    try {
-      // eslint-disable-next-line
-      const hands = await (window as any).handDetector.estimateHands(videoRef.current);
-      
-      // setLandmarks(hands);
-      drawResults(hands);
-      checkNotes(hands);
-    } catch (err) {
-      console.error('Detection error:', err);
-    }
-
-    // Continue detection loop
-    requestAnimationFrame(detectHands);
-  };
-
   // Draw hand landmarks on canvas
   const drawResults = (hands: handPoseDetection.Hand[]) => {
     if (!canvasRef.current) return;
@@ -866,17 +867,19 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
       ctx!.stroke();
     }
 
-    // draw 2 octaves - white keys
+    // Create arrays to store the key data and hotspots
+    const whiteKeyData: { x: number, y: number, botX: number, botY: number, topX: number, topY: number, note: string }[] = [];
+    const blackKeyData: { x: number, y: number, botX: number, botY: number, topX: number, topY: number, note: string }[] = [];
+    const whiteKeyHotspots: { x: number, y: number, note: string }[] = [];
+    const blackKeyHotspots: { x: number, y: number, note: string }[] = [];
+    
+    // Draw white keys and create white key hotspots
     ctx!.strokeStyle = 'white';
     ctx!.lineWidth = 1;
-    
-    // Create an array to store the hotspot positions
-    const whiteKeyHotspots: { x: number, y: number, note: string }[] = [];
     
     for (let i = 0; i < 15; i++) {
       const leftBotX = i * 40 + 20;
       const leftBotY = botY;
-
       const leftTopX = i * 32 + 80;
       const leftTopY = topY;
 
@@ -889,34 +892,47 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
 
       const { note } = notesPos[notesPos.length - i - 1];
       
-      // Store the hotspot position at the top of the white key
+      // Store complete key data including coordinates and note
+      whiteKeyData.push({
+        x: leftTopX + 16, // Hotspot x
+        y: topY + 15,     // Hotspot y
+        botX: leftBotX,
+        botY: leftBotY,
+        topX: leftTopX,
+        topY: leftTopY,
+        note: note
+      });
+      
+      // Also store just the hotspot info
       whiteKeyHotspots.push({
-        x: leftTopX + 16, // Middle of the key at the top
-        y: topY + 15,    // Slightly below the top edge
+        x: leftTopX + 16,
+        y: topY + 15,
         note: note
       });
 
       if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === note)) {
-        ctx!.fillStyle = 'rgba(255, 0, 0, 0.3)';
+        // Stronger visual feedback for white keys when pressed
+        ctx!.fillStyle = 'rgba(255, 0, 0, 0.8)'; // Increased opacity for more obvious red
         ctx!.fill();
+        
+        // Add border highlight
+        ctx!.strokeStyle = 'yellow';
+        ctx!.lineWidth = 3;
+        ctx!.stroke();
       }
 
       ctx!.stroke();
     }
 
-    // Draw black keys
+    // Draw black keys and create black key hotspots
     ctx!.strokeStyle = 'black';
     ctx!.fillStyle = 'black';
     
-    // Create an array to store the black key hotspot positions
-    const blackKeyHotspots: { x: number, y: number, note: string }[] = [];
-    
-    let noteI = 15;
+    let blackKeyIndex = 15;
     for (let i = 0; i < 15; i++) {
       if ([1, 2, 4, 5, 6].includes(i % 7)) {
         const leftBotX = 620 - (i * 40 - 10);
         const leftBotY = botY;
-
         const leftTopX = 590 - (i * 36 - 9);
         const leftTopY = (botY - topY) * blackKeyHeightRatio + topY;
 
@@ -928,89 +944,196 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
         ctx!.lineTo(leftTopX, leftTopY);
         ctx!.stroke();
 
-        const { note } = notesPos[notesPos.length - noteI - 1];
+        const { note } = notesPos[notesPos.length - blackKeyIndex - 1];
         
-        // Store the hotspot position at the top of the black key
+        // Store complete key data including coordinates and note
+        blackKeyData.push({
+          x: leftTopX - 9,
+          y: leftTopY + 15,
+          botX: leftBotX,
+          botY: leftBotY,
+          topX: leftTopX,
+          topY: leftTopY,
+          note: note
+        });
+        
+        // Also store just the hotspot info
         blackKeyHotspots.push({
-          x: leftTopX - 9, // Middle of the black key
-          y: leftTopY + 15, // Slightly below the top edge
+          x: leftTopX - 9,
+          y: leftTopY + 15,
           note: note
         });
 
         if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === note)) {
-          ctx!.fillStyle = 'rgba(255, 0, 0, 0.3)';
+          // Stronger visual feedback for black keys when pressed
+          ctx!.fillStyle = 'rgba(255, 80, 80, 1.0)'; // Brighter, fully opaque red
           ctx!.fill();
+          
+          // Add border highlight
+          ctx!.strokeStyle = 'yellow';
+          ctx!.lineWidth = 3;
+          ctx!.stroke();
+          
+          ctx!.strokeStyle = 'black';
+          ctx!.lineWidth = 1;
           ctx!.fillStyle = 'black';
         } else {
           ctx!.fill();
         }
-        noteI++;
+        blackKeyIndex++;
       }
     }
     
-    // Draw all hotspots as red dots
-    ctx!.fillStyle = "red";
-    
-    // Draw white key hotspots
-    for (const hotspot of whiteKeyHotspots) {
+    // Draw white key hotspots with enhanced visual feedback
+    for (const keyData of whiteKeyData) {
       ctx!.beginPath();
-      ctx!.arc(hotspot.x, hotspot.y, 6, 0, 2 * Math.PI);
+      ctx!.arc(keyData.x, keyData.y, 8, 0, 2 * Math.PI); // Smaller hotspot dots
       
-      // Highlight active hotspots
-      if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === hotspot.note)) {
-        ctx!.fillStyle = "yellow";
+      // Check if this key is being played
+      const isKeyPressed = notesBeingPlayed.current.some(
+        (playedNote) => playedNote.note.note === keyData.note
+      );
+      
+      if (isKeyPressed) {
+        // Draw the entire key in bright red
+        ctx!.beginPath();
+        ctx!.moveTo(keyData.topX, keyData.topY);
+        ctx!.lineTo(keyData.botX, keyData.botY);
+        ctx!.lineTo(keyData.botX + 40, keyData.botY);
+        ctx!.lineTo(keyData.topX + 32, keyData.topY);
+        ctx!.closePath();
+        ctx!.fillStyle = 'rgb(255, 0, 0)'; // Solid red
         ctx!.fill();
-        ctx!.fillStyle = "red";
+        
+        // Yellow border
+        ctx!.strokeStyle = 'yellow';
+        ctx!.lineWidth = 4;
+        ctx!.stroke();
+        
+        // Draw a large flashing circle around the hotspot
+        const pulseSize = 20 + Math.sin(Date.now() / 80) * 10; // Smaller pulsing effect
+        
+        ctx!.beginPath();
+        ctx!.arc(keyData.x, keyData.y, pulseSize, 0, 2 * Math.PI);
+        ctx!.fillStyle = 'rgba(255, 255, 0, 0.5)'; // Yellow glow
+        ctx!.fill();
+        
+        // Draw the hotspot itself in bright yellow
+        ctx!.beginPath();
+        ctx!.arc(keyData.x, keyData.y, 8, 0, 2 * Math.PI);
+        ctx!.fillStyle = 'yellow';
+        ctx!.fill();
       } else {
+        // Normal state - smaller dot with border
+        ctx!.fillStyle = "red";
         ctx!.fill();
+        ctx!.strokeStyle = 'white';
+        ctx!.lineWidth = 1;
+        ctx!.stroke();
       }
     }
     
-    // Draw black key hotspots
-    for (const hotspot of blackKeyHotspots) {
+    // Draw black key hotspots with enhanced visual feedback
+    for (const keyData of blackKeyData) {
       ctx!.beginPath();
-      ctx!.arc(hotspot.x, hotspot.y, 6, 0, 2 * Math.PI);
+      ctx!.arc(keyData.x, keyData.y, 8, 0, 2 * Math.PI); // Smaller hotspot dots
       
-      // Highlight active hotspots
-      if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === hotspot.note)) {
-        ctx!.fillStyle = "yellow";
+      // Check if this key is being played
+      const isKeyPressed = notesBeingPlayed.current.some(
+        (playedNote) => playedNote.note.note === keyData.note
+      );
+      
+      if (isKeyPressed) {
+        // Draw the entire key in bright red
+        ctx!.beginPath();
+        ctx!.moveTo(keyData.topX, keyData.topY);
+        ctx!.lineTo(keyData.botX, keyData.botY);
+        ctx!.lineTo(keyData.botX - 20, keyData.botY);
+        ctx!.lineTo(keyData.topX - 18, keyData.topY);
+        ctx!.closePath();
+        ctx!.fillStyle = 'rgb(255, 50, 50)'; // Bright red
         ctx!.fill();
-        ctx!.fillStyle = "red";
+        
+        // Yellow border
+        ctx!.strokeStyle = 'yellow';
+        ctx!.lineWidth = 4;
+        ctx!.stroke();
+        
+        // Draw a large flashing circle around the hotspot
+        const pulseSize = 20 + Math.sin(Date.now() / 80) * 10; // Smaller pulsing effect
+        
+        ctx!.beginPath();
+        ctx!.arc(keyData.x, keyData.y, pulseSize, 0, 2 * Math.PI);
+        ctx!.fillStyle = 'rgba(255, 255, 0, 0.5)'; // Yellow glow
+        ctx!.fill();
+        
+        // Draw the hotspot itself in bright yellow
+        ctx!.beginPath();
+        ctx!.arc(keyData.x, keyData.y, 8, 0, 2 * Math.PI);
+        ctx!.fillStyle = 'yellow';
+        ctx!.fill();
       } else {
+        // Normal state - smaller dot with border
+        ctx!.fillStyle = "red";
         ctx!.fill();
+        ctx!.strokeStyle = 'white';
+        ctx!.lineWidth = 1;
+        ctx!.stroke();
       }
     }
     
     // Store all hotspots in a window variable for note detection
     window.pianoHotspots = [...whiteKeyHotspots, ...blackKeyHotspots];
     
-    // Draw each detected hand
+    // Draw each detected hand with improved fingertip tracking
     hands.forEach(hand => {
-      // Draw keypoints
-      for (let i = 4; i < hand.keypoints.length; i += 4) {
-        const { x, y } = hand.keypoints[i];
+      // Draw only the fingertips with improved visualization
+      for (let i = 0; i < FINGERTIP_INDICES.length; i++) {
+        const keypoint = hand.keypoints[FINGERTIP_INDICES[i]];
+        if (!keypoint) continue;
         
+        const { x, y } = keypoint;
+        
+        // Draw circles for fingertips
         ctx!.beginPath();
-        ctx!.arc(x, y, 5, 0, 2 * Math.PI);
-        ctx!.fillStyle = i === 0 ? 'red' : 'blue'; // Wrist point in red, others in blue
+        ctx!.arc(x, y, 8, 0, 2 * Math.PI);
+        
+        // Use different colors for different fingers for better visualization
+        const fingerColors = ['red', '#00FF00', '#00FFFF', '#FFFF00', '#FF00FF'];
+        ctx!.fillStyle = fingerColors[i];
         ctx!.fill();
+        
+        // Add a white border to make dots more visible
+        ctx!.strokeStyle = 'white';
+        ctx!.lineWidth = 2;
+        ctx!.stroke();
       }
       
-      // Draw connections
-      ctx!.strokeStyle = 'green';
+      // Draw hand skeleton lines for better visualization
+      ctx!.strokeStyle = 'rgba(0, 255, 0, 0.5)';
       ctx!.lineWidth = 2;
       
-      // for (const [i, j] of connections) {
-      //   const from = keypoints[i];
-      //   const to = keypoints[j];
+      // Draw palm connections
+      const palmConnections = [
+        [0, 1], [1, 2], [2, 3], [3, 4],  // thumb
+        [0, 5], [5, 6], [6, 7], [7, 8],  // index
+        [0, 9], [9, 10], [10, 11], [11, 12],  // middle
+        [0, 13], [13, 14], [14, 15], [15, 16],  // ring
+        [0, 17], [17, 18], [18, 19], [19, 20],  // pinky
+        [0, 5], [5, 9], [9, 13], [13, 17]  // palm connections
+      ];
+      
+      for (const [i, j] of palmConnections) {
+        const from = hand.keypoints[i];
+        const to = hand.keypoints[j];
         
-      //   if (from && to) {
-      //     ctx!.beginPath();
-      //     ctx!.moveTo(from.x, from.y);
-      //     ctx!.lineTo(to.x, to.y);
-      //     ctx!.stroke();
-      //   }
-      // }
+        if (from && to) {
+          ctx!.beginPath();
+          ctx!.moveTo(from.x, from.y);
+          ctx!.lineTo(to.x, to.y);
+          ctx!.stroke();
+        }
+      }
     });
 
     
@@ -1018,26 +1141,118 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
     ctx!.restore();
   };
 
+  // Apply smoothing to landmark positions
+  const smoothLandmarks = (hands: handPoseDetection.Hand[]): handPoseDetection.Hand[] => {
+    const smoothingFactor = 0.4; // Reduced from 0.7 to 0.4 to decrease latency
+    const smoothedHands = [...hands];
+    
+    hands.forEach((hand, handIndex) => {
+      const handId = `${hand.handedness}-${handIndex}`;
+      
+      // Initialize position history if this is a new hand
+      if (!previousFingerPositions.current[handId]) {
+        previousFingerPositions.current[handId] = hand.keypoints.map(kp => ({ 
+          x: kp.x, 
+          y: kp.y, 
+          z: hand.keypoints3D ? hand.keypoints3D[hand.keypoints.indexOf(kp)].z || 0 : 0 
+        }));
+        return;
+      }
+      
+      // Apply smoothing to each keypoint
+      hand.keypoints.forEach((keypoint, i) => {
+        const prev = previousFingerPositions.current[handId][i];
+        
+        // Smooth the x, y positions
+        const smoothedX = prev.x * smoothingFactor + keypoint.x * (1 - smoothingFactor);
+        const smoothedY = prev.y * smoothingFactor + keypoint.y * (1 - smoothingFactor);
+        
+        // Update the keypoint with smoothed values
+        smoothedHands[handIndex].keypoints[i].x = smoothedX;
+        smoothedHands[handIndex].keypoints[i].y = smoothedY;
+        
+        // Smooth the z position if available
+        if (hand.keypoints3D && hand.keypoints3D[i]) {
+          const zValue = hand.keypoints3D[i].z || 0;
+          const smoothedZ = prev.z * smoothingFactor + zValue * (1 - smoothingFactor);
+          if (smoothedHands[handIndex].keypoints3D && smoothedHands[handIndex].keypoints3D[i]) {
+            smoothedHands[handIndex].keypoints3D[i].z = smoothedZ;
+          }
+          
+          // Update the stored z value
+          prev.z = smoothedZ;
+        }
+        
+        // Update stored positions for next frame
+        prev.x = smoothedX;
+        prev.y = smoothedY;
+      });
+    });
+    
+    // Clean up any stale hand data
+    const activeHandIds = hands.map((hand, idx) => `${hand.handedness}-${idx}`);
+    Object.keys(previousFingerPositions.current).forEach(handId => {
+      if (!activeHandIds.includes(handId)) {
+        delete previousFingerPositions.current[handId];
+      }
+    });
+    
+    return smoothedHands;
+  };
+
+  // Hand detection loop with smoothing
+  const detectHands = async () => {
+    // eslint-disable-next-line
+    if (!(window as any).handDetector || !videoRef.current || !canvasRef.current) {
+      return;
+    }
+
+    try {
+      // eslint-disable-next-line
+      let hands = await (window as any).handDetector.estimateHands(videoRef.current);
+      
+      // Apply smoothing to reduce jitter
+      hands = smoothLandmarks(hands);
+      
+      // setLandmarks(hands);
+      drawResults(hands);
+      checkNotes(hands);
+    } catch (err) {
+      console.error('Detection error:', err);
+    }
+
+    // Continue detection loop
+    requestAnimationFrame(detectHands);
+  };
+
   const checkNotes = (hands: handPoseDetection.Hand[]) => {
-    const fingers = hands.flatMap((hand) => hand.keypoints.map((k, i) => ({
-      keypoints: k, keypoints3D: hand.keypoints3D![i], handedness: hand.handedness
-    })).filter((_, i) => i !== 0 && i % 4 === 0));
+    // Only use fingertips for note detection
+    const fingertips = hands.flatMap((hand) => 
+      FINGERTIP_INDICES.map((fingerIdx, i) => ({
+        keypoints: hand.keypoints[fingerIdx], 
+        keypoints3D: hand.keypoints3D?.[fingerIdx] || { x: 0, y: 0, z: 0 },
+        handedness: hand.handedness,
+        fingerName: FINGER_NAMES[i]
+      }))
+    );
 
     // Get the piano hotspots that were created in drawResults
     const hotspots = window.pianoHotspots || [];
 
-    const playedNotes = fingers.flatMap((finger, i) => {
+    const playedNotes = fingertips.flatMap((finger) => {
+      if (!finger.keypoints) return []; // Skip if keypoint is missing
+      
       // Find if the finger is touching any hotspot
-      const hotspot = hotspots.find((spot: { x: number, y: number, note: string }) => {
+      const hotspot = hotspots.find((spot: {x: number, y: number, note: string}) => {
+        if (!spot || typeof spot.x !== 'number' || typeof spot.y !== 'number') return false;
+        
         const dx = finger.keypoints.x - spot.x;
         const dy = finger.keypoints.y - spot.y;
         // Calculate squared distance (faster than using Math.sqrt for distance)
         const sqDistance = dx*dx + dy*dy;
-        // Check vertical position (Z-axis)
-        const vertical = finger.keypoints3D.y;
         
-        // Return true if finger is close to hotspot and pushing down enough
-        return sqDistance < 100 && vertical > verticals[i % 5];
+        // VERY lenient detection - increase radius significantly for testing
+        return sqDistance < 400; // Much larger detection radius to debug
       });
 
       // Return the note if a hotspot was found, otherwise empty array
@@ -1046,10 +1261,20 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
           note: hotspot.note, 
           polygon: [] // We still need to match the expected structure
         }, 
-        finger: finger.keypoints.name, 
+        finger: finger.fingerName, 
         hand: finger.handedness 
       }] : [];
     });
+    
+    // Log for debugging
+    if (playedNotes.length > 0) {
+      console.log('Notes being played:', playedNotes.map(note => note.note.note).join(', '));
+    }
+    
+    // Log info about hotspots and fingertips for debugging
+    if (fingertips.length > 0 && hotspots.length > 0) {
+      console.log(`Found ${fingertips.length} fingertips and ${hotspots.length} hotspots`);
+    }
     
     for (const note of notesBeingPlayed.current) {
       if (playedNotes.every((playedNote) => playedNote.note.note !== note.note.note)) {
@@ -1059,29 +1284,31 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
 
     for (const playedNote of playedNotes) {
       if (!notesBeingPlayed.current.some((noteBeingPlayed) => noteBeingPlayed.note.note === playedNote.note.note)) {
-        onStartNotePlay(playedNote.note.note, playedNote.finger!, playedNote.hand === "Left" ? "Right" : "Left");
+        handleStartNotePlay(playedNote.note.note, playedNote.finger!, playedNote.hand === "Left" ? "Right" : "Left");
       }
     }
 
-    notesBeingPlayed.current = playedNotes.map((playedNote) => playedNote);
+    notesBeingPlayed.current = playedNotes;
   };
 
   return (
-    <div className="relative mb-4">
-      <video 
-          ref={videoRef} 
-          className="rounded-lg bg-gray-100 scale-x-[-1]" 
-          width="640" 
-          height="480"
-          muted
-          playsInline
-      />
-      <canvas 
-          ref={canvasRef} 
-          className="absolute top-0 left-0 z-10" 
-          width="640" 
-          height="480"
-      />
+    <div className="flex justify-center items-center">
+      <div className="relative mb-4">
+        <video 
+            ref={videoRef} 
+            className="rounded-lg bg-gray-100 scale-x-[-1]" 
+            width="640" 
+            height="480"
+            muted
+            playsInline
+        />
+        <canvas 
+            ref={canvasRef} 
+            className="absolute top-0 left-0 z-10" 
+            width="640" 
+            height="480"
+        />
+      </div>
     </div>
   );
 };

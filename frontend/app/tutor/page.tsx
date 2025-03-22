@@ -26,10 +26,10 @@ export default function TutorPage() {
 
   const handleEndNotePlay = useCallback((note: string, finger: string, hand: string) => {
     console.log(`Stopped playing ${note} using ${hand} ${finger}`);
-    console.log(startTime)
     if (startTime.current === null) return;
     setPlayedNotes((prev) => {
       const index = prev.findLastIndex((prevNote) => prevNote.note === note);
+      if (index === -1) return prev;
       return [...prev.slice(0, index), { ...prev[index], duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime }, ...prev.slice(index + 1)]
     });
   }, [playedNotes, startTime.current]);
@@ -70,11 +70,12 @@ export default function TutorPage() {
   
       const data = await response.json();
   
-      setMessage(data.response.content[0].text);
+      setMessage(data.response);
     });
 
     setExpectedNotes([]);
     setPlayedNotes([]);
+    startTime.current = new Date().getTime();
     
   }, [expectedNotes, playedNotes]);
 

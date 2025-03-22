@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
     "@mediapipe/camera_utils": "^0.3.1675466862",
     "@mediapipe/drawing_utils": "^0.3.1675466124",
     "@radix-ui/react-slot": "^1.1.2",
@@ -16,6 +17,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cohere-ai": "^7.16.0",
+    "gray-matter": "^4.0.3",
     "install": "^0.13.0",
     "lucide-react": "^0.483.0",
     "next": "15.2.3",
@@ -24,6 +26,8 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "react-resizable-panels": "^2.1.7",
+    "remark": "^15.0.1",
+    "remark-html": "^16.0.1",
     "soundfont-player": "^0.12.0",
     "tailwind-merge": "^3.0.2",
     "tw-animate-css": "^1.2.4",
