@@ -18,6 +18,7 @@ interface MusicNotesProps {
   onEndNote: (note: string) => void;
   onStart: () => void;
   onEnd: () => void;
+  mode: "left" | "right" | "both";
 }
 
 export function MusicNotes({ 
@@ -53,7 +54,8 @@ export function MusicNotes({
   onStartNote,
   onEndNote,
   onStart,
-  onEnd
+  onEnd,
+  mode
 }: MusicNotesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const factoryRef = useRef<Factory | null>(null);
@@ -82,23 +84,27 @@ export function MusicNotes({
       } else {
         if (highlightedTrebleIndex === 0 && highlightedBassIndex === 0) {
           // Start playing treble notes
-          const currentTrebleNote = trebleNotes[highlightedTrebleIndex].key;
-          if (Array.isArray(currentTrebleNote)) {
-            currentTrebleNote.forEach(note => {
-              onStartNote(note.replaceAll("/", "").toUpperCase());
-            });
-          } else {
-            onStartNote(currentTrebleNote.replaceAll("/", "").toUpperCase());
+          if (mode === "right" || mode === "both") {
+            const currentTrebleNote = trebleNotes[highlightedTrebleIndex].key;
+            if (Array.isArray(currentTrebleNote)) {
+              currentTrebleNote.forEach(note => {
+                onStartNote(note.replaceAll("/", "").toUpperCase());
+              });
+            } else {
+              onStartNote(currentTrebleNote.replaceAll("/", "").toUpperCase());
+            }
           }
           
           // Start playing bass notes
-          const currentBassNote = bassNotes[highlightedBassIndex].key;
-          if (Array.isArray(currentBassNote)) {
-            currentBassNote.forEach(note => {
-              onStartNote(note.replaceAll("/", "").toUpperCase());
-            });
-          } else {
-            onStartNote(currentBassNote.replaceAll("/", "").toUpperCase());
+          if (mode === "left" || mode === "both") {
+            const currentBassNote = bassNotes[highlightedBassIndex].key;
+            if (Array.isArray(currentBassNote)) {
+              currentBassNote.forEach(note => {
+                onStartNote(note.replaceAll("/", "").toUpperCase());
+              });
+            } else {
+              onStartNote(currentBassNote.replaceAll("/", "").toUpperCase());
+            }
           }
           
           onStart();
@@ -129,12 +135,14 @@ export function MusicNotes({
       const nextTrebleNote = trebleNotes[nextTrebleIndex].key;
       
       // Start next note
-      if (Array.isArray(nextTrebleNote)) {
-        nextTrebleNote.forEach(note => {
-          onStartNote(note.replaceAll("/", "").toUpperCase());
-        });
-      } else {
-        onStartNote(nextTrebleNote.replaceAll("/", "").toUpperCase());
+      if (mode === "right" || mode === "both") {
+          if (Array.isArray(nextTrebleNote)) {
+            nextTrebleNote.forEach(note => {
+              onStartNote(note.replaceAll("/", "").toUpperCase());
+          });
+        } else {
+          onStartNote(nextTrebleNote.replaceAll("/", "").toUpperCase());
+        }
       }
 
       setHighlightedTrebleIndex(nextTrebleIndex);
@@ -173,12 +181,14 @@ export function MusicNotes({
       const nextBassNote = bassNotes[nextBassIndex].key;
       
       // Start next note
-      if (Array.isArray(nextBassNote)) {
-        nextBassNote.forEach(note => {
-          onStartNote(note.replaceAll("/", "").toUpperCase());
-        });
-      } else {
-        onStartNote(nextBassNote.replaceAll("/", "").toUpperCase());
+      if (mode === "left" || mode === "both") {
+        if (Array.isArray(nextBassNote)) {
+          nextBassNote.forEach(note => {
+            onStartNote(note.replaceAll("/", "").toUpperCase());
+          });
+        } else {
+          onStartNote(nextBassNote.replaceAll("/", "").toUpperCase());
+        }
       }
 
       setHighlightedBassIndex(nextBassIndex);
@@ -337,15 +347,19 @@ export function MusicNotes({
     };
 
     // Draw treble clef notes
-    drawNotes(trebleNotes, highlightedTrebleIndex, 40, "treble");
+    if (mode === "right" || mode === "both") {
+      drawNotes(trebleNotes, highlightedTrebleIndex, 40, "treble");
+    }
     
     // Draw bass clef notes
-    drawNotes(bassNotes, highlightedBassIndex, 160, "bass");
+    if (mode === "left" || mode === "both") {
+      drawNotes(bassNotes, highlightedBassIndex, 160, "bass");
+    }
     
   }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center gap-4">
+    <div className="w-full h-fit -mt-2 flex items-center justify-center gap-4">
       <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px', height: '300px' }} />
       <Button 
         onClick={togglePlaying}
