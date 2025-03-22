@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Factory, Beam, StaveNote } from "vexflow";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
+import { Metronome } from "./Metronome";
 
 interface Note {
   key: string | string[];  // Can be a single note or array of notes
@@ -360,6 +361,7 @@ export function MusicNotes({
 
   return (
     <div className="w-full h-fit -mt-2 flex items-center justify-center gap-4">
+      <Metronome tempo={tempo} isPlaying={isPlaying} />
       <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px', height: '300px' }} />
       <Button 
         onClick={togglePlaying}
