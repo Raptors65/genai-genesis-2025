@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Factory } from "vexflow";
+import { Factory, Beam, StaveNote } from "vexflow";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 
@@ -12,7 +12,8 @@ interface Note {
 
 interface MusicNotesProps {
   tempo?: number;
-  notes?: Note[];
+  trebleNotes?: Note[];
+  bassNotes?: Note[];
   onStartNote: (note: string) => void;
   onEndNote: (note: string) => void;
   onStart: () => void;
@@ -21,19 +22,33 @@ interface MusicNotesProps {
 
 export function MusicNotes({ 
   tempo = 80, 
-  notes = [
+  trebleNotes = [
     { key: ["c/4", "e/4" ], duration: "q" },  // C major chord
     { key: ["d/4"], duration: "q" },  // D minor chord
     { key: ["e/4", "g/4"], duration: "h" },  // E minor chord
-    { key: ["c/4"], duration: "q" },  // C major chord
+    { key: ["c/4"], duration: "h" },  // C major chord
     { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4"], duration: "h" },  // E minor chord
+    { key: ["e/4"], duration: "q" },  // E minor chord
     { key: ["d/4", "f/4", "a/4"], duration: "w" },  // D minor chord
     { key: ["d/4"], duration: "8" },  // D minor chord
     { key: ["e/4"], duration: "8" },  // E minor chord
     { key: ["e/4"], duration: "8" },  // E minor chord
     { key: ["e/4"], duration: "8" },  // E minor chord
     { key: ["e/4", "g/4", "b/4"], duration: "h" }   // E minor chord
+  ],
+  bassNotes = [
+    { key: ["c/3"], duration: "q" },
+    { key: ["g/3"], duration: "q" },
+    { key: ["c/3"], duration: "h" },
+    { key: ["f/3"], duration: "q" },
+    { key: ["g/3"], duration: "q" },
+    { key: ["c/3"], duration: "h" },
+    { key: ["f/3"], duration: "w" },
+    { key: ["g/3"], duration: "8" },
+    { key: ["a/3"], duration: "8" },
+    { key: ["b/3"], duration: "8" },
+    { key: ["a/3"], duration: "8" },
+    { key: ["e/3"], duration: "h" }
   ],
   onStartNote,
   onEndNote,
@@ -43,7 +58,8 @@ export function MusicNotes({
   const containerRef = useRef<HTMLDivElement>(null);
   const factoryRef = useRef<Factory | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [highlightedNote, setHighlightedNote] = useState(0);
+  const [highlightedTrebleIndex, setHighlightedTrebleIndex] = useState(0);
+  const [highlightedBassIndex, setHighlightedBassIndex] = useState(0);
 
   // Convert note durations to beats
   const getBeats = (duration: string): number => {
@@ -60,18 +76,31 @@ export function MusicNotes({
   const togglePlaying = () => {
     setIsPlaying((prev) => {
       if (prev) {
-        setHighlightedNote(0);
+        setHighlightedTrebleIndex(0);
+        setHighlightedBassIndex(0);
         return false;
       } else {
-        if (highlightedNote === 0) {
-          const currentNote = notes[highlightedNote].key;
-          if (Array.isArray(currentNote)) {
-            currentNote.forEach(note => {
+        if (highlightedTrebleIndex === 0 && highlightedBassIndex === 0) {
+          // Start playing treble notes
+          const currentTrebleNote = trebleNotes[highlightedTrebleIndex].key;
+          if (Array.isArray(currentTrebleNote)) {
+            currentTrebleNote.forEach(note => {
               onStartNote(note.replaceAll("/", "").toUpperCase());
             });
           } else {
-            onStartNote(currentNote.replaceAll("/", "").toUpperCase());
+            onStartNote(currentTrebleNote.replaceAll("/", "").toUpperCase());
           }
+          
+          // Start playing bass notes
+          const currentBassNote = bassNotes[highlightedBassIndex].key;
+          if (Array.isArray(currentBassNote)) {
+            currentBassNote.forEach(note => {
+              onStartNote(note.replaceAll("/", "").toUpperCase());
+            });
+          } else {
+            onStartNote(currentBassNote.replaceAll("/", "").toUpperCase());
+          }
+          
           onStart();
         }
         return true;
@@ -79,36 +108,88 @@ export function MusicNotes({
     });
   }
 
+  // Handle treble clef playback
   useEffect(() => {
     if (!isPlaying) return;
 
-    const interval = setInterval(() => {
-      const currentNote = notes[highlightedNote].key;
-      if (Array.isArray(currentNote)) {
-        currentNote.forEach(note => {
+    // Function to handle the treble note progression
+    const handleTrebleNote = () => {
+      // End current note
+      const currentTrebleNote = trebleNotes[highlightedTrebleIndex].key;
+      if (Array.isArray(currentTrebleNote)) {
+        currentTrebleNote.forEach(note => {
           onEndNote(note.replaceAll("/", "").toUpperCase());
         });
       } else {
-        onEndNote(currentNote.replaceAll("/", "").toUpperCase());
+        onEndNote(currentTrebleNote.replaceAll("/", "").toUpperCase());
       }
 
-      if (highlightedNote === notes.length - 1) {
-        onEnd();
-      }
-
-      const nextNote = notes[(highlightedNote + 1) % notes.length].key;
-      if (Array.isArray(nextNote)) {
-        nextNote.forEach(note => {
+      // Move to next note
+      const nextTrebleIndex = (highlightedTrebleIndex + 1) % trebleNotes.length;
+      const nextTrebleNote = trebleNotes[nextTrebleIndex].key;
+      
+      // Start next note
+      if (Array.isArray(nextTrebleNote)) {
+        nextTrebleNote.forEach(note => {
           onStartNote(note.replaceAll("/", "").toUpperCase());
         });
       } else {
-        onStartNote(nextNote.replaceAll("/", "").toUpperCase());
+        onStartNote(nextTrebleNote.replaceAll("/", "").toUpperCase());
       }
-      setHighlightedNote((prev) => (prev + 1) % notes.length);
-    }, (60000 / tempo) * getBeats(notes[highlightedNote].duration));
 
-    return () => clearInterval(interval);
-  }, [isPlaying, highlightedNote]);
+      setHighlightedTrebleIndex(nextTrebleIndex);
+      
+      // Call onEnd if both clefs have completed their cycles
+      if (nextTrebleIndex === 0) {
+        onEnd();
+      }
+    };
+
+    // Set up interval for treble notes
+    const trebleInterval = (60000 / tempo) * getBeats(trebleNotes[highlightedTrebleIndex].duration);
+    const timeoutId = setTimeout(handleTrebleNote, trebleInterval);
+
+    return () => clearTimeout(timeoutId);
+  }, [isPlaying, highlightedTrebleIndex, tempo]);
+
+  // Handle bass clef playback
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    // Function to handle the bass note progression
+    const handleBassNote = () => {
+      // End current note
+      const currentBassNote = bassNotes[highlightedBassIndex].key;
+      if (Array.isArray(currentBassNote)) {
+        currentBassNote.forEach(note => {
+          onEndNote(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        onEndNote(currentBassNote.replaceAll("/", "").toUpperCase());
+      }
+
+      // Move to next note
+      const nextBassIndex = (highlightedBassIndex + 1) % bassNotes.length;
+      const nextBassNote = bassNotes[nextBassIndex].key;
+      
+      // Start next note
+      if (Array.isArray(nextBassNote)) {
+        nextBassNote.forEach(note => {
+          onStartNote(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        onStartNote(nextBassNote.replaceAll("/", "").toUpperCase());
+      }
+
+      setHighlightedBassIndex(nextBassIndex);
+    };
+
+    // Set up interval for bass notes
+    const bassInterval = (60000 / tempo) * getBeats(bassNotes[highlightedBassIndex].duration);
+    const timeoutId = setTimeout(handleBassNote, bassInterval);
+
+    return () => clearTimeout(timeoutId);
+  }, [isPlaying, highlightedBassIndex, tempo]);
 
   // Initialize VexFlow factory once
   useEffect(() => {
@@ -116,7 +197,7 @@ export function MusicNotes({
 
     // Create a VexFlow factory
     factoryRef.current = new Factory({
-      renderer: { elementId: containerRef.current.id, width: 900, height: 200 },
+      renderer: { elementId: containerRef.current.id, width: 900, height: 300 },
     });
 
     // Cleanup
@@ -135,127 +216,137 @@ export function MusicNotes({
     const context = factory.getContext();
     context.clear();
 
-    // Calculate total beats and number of staves needed
-    let currentBeats = 0;
-    let staveCount = 0;
-    const beatsPerStave = 4; // 4/4 time signature
+    const drawNotes = (notes: Note[], isHighlightedIndex: number, yPosition: number, clef: "treble" | "bass") => {
+      // Calculate total beats and number of staves needed
+      let currentBeats = 0;
+      let staveCount = 0;
+      const beatsPerStave = 4; // 4/4 time signature
 
-    // First pass: calculate number of staves needed
-    notes.forEach(note => {
-      currentBeats += getBeats(note.duration);
-      if (currentBeats >= beatsPerStave) {
-        staveCount++;
-        currentBeats -= beatsPerStave;
-      }
-    });
-    if (currentBeats > 0) staveCount++; // Add one more stave if there are remaining beats
-
-    // Create staves and distribute notes
-    const staves = [];
-    const staveWidth = 200;
-
-    let currentStaveIndex = 0;
-    let currentBeatsInStave = 0;
-    let currentStaveNotes: any[] = [];
-
-    // Create and draw staves and notes as we go
-    for (let i = 0; i < staveCount; i++) {
-      const stave = factory.Stave({ 
-        x: 10 + (i * (staveWidth)) + (i == 0 ? 0 : 50), 
-        y: 40, 
-        width: staveWidth + (i == 0 ? 50 : 0)
+      // First pass: calculate number of staves needed
+      notes.forEach(note => {
+        currentBeats += getBeats(note.duration);
+        if (currentBeats >= beatsPerStave) {
+          staveCount++;
+          currentBeats -= beatsPerStave;
+        }
       });
-      
-      // Add clef and time signature only to first stave
-      if (i === 0) {
-        stave.addClef("treble").setContext(context).draw();
-        stave.addTimeSignature("4/4").setContext(context).draw();
-      }
-      
-      stave.setContext(context).draw();
-      staves.push(stave);
+      if (currentBeats > 0) staveCount++; // Add one more stave if there are remaining beats
 
-      // Add notes to this stave until we reach the beat limit
-      while (currentStaveIndex < notes.length) {
-        const note = notes[currentStaveIndex];
-        const beats = getBeats(note.duration);
-        
-        // Check if this note would exceed the beat limit
-        if (currentBeatsInStave + beats > beatsPerStave) {
-          break;
-        }
-        
-        const staveNote = factory.StaveNote({ 
-          keys: Array.isArray(note.key) ? note.key : [note.key], 
-          duration: note.duration,
-          autoStem: true
+      // Create staves and distribute notes
+      const staves = [];
+      const staveWidth = 200;
+
+      let currentStaveIndex = 0;
+      let currentBeatsInStave = 0;
+      let currentStaveNotes: StaveNote[] = [];
+
+      // Create and draw staves and notes as we go
+      for (let i = 0; i < staveCount; i++) {
+        const stave = factory.Stave({ 
+          x: 10 + (i * (staveWidth)) + (i == 0 ? 0 : 50), 
+          y: yPosition, 
+          width: staveWidth + (i == 0 ? 50 : 0)
         });
         
-        // Remove flags from eighth notes and shorter durations
-        if (note.duration === "8" || note.duration === "16") {
-          (staveNote as any).setBeam(null);
+        // Add clef and time signature only to first stave
+        if (i === 0) {
+          stave.addClef(clef).setContext(context).draw();
+          stave.addTimeSignature("4/4").setContext(context).draw();
         }
         
-        if (currentStaveIndex === highlightedNote) {
-          staveNote.setStyle({ fillStyle: "#F39C12", strokeStyle: "#F39C12" });
-        }
-        
-        currentStaveNotes.push(staveNote);
-        currentBeatsInStave += beats;
-        currentStaveIndex++;
-      }
+        stave.setContext(context).draw();
+        staves.push(stave);
 
-      // Create and draw voice for this stave's notes
-      if (currentStaveNotes.length > 0) {
-        const voice = factory.Voice().addTickables(currentStaveNotes);
-        
-        // Add final barline to the last stave
-        if (i === staveCount - 1) {
-          const barNote = factory.BarNote({ type: "end" });
-          voice.addTickable(barNote);
-        }
-        
-        factory.Formatter().joinVoices([voice]).format([voice], staveWidth);
-        voice.setContext(context).draw();
-
-        // Add beams for eighth notes and shorter durations
-        const beams: any[] = [];
-        let currentBeamNotes: any[] = [];
-        
-        currentStaveNotes.forEach((note, index) => {
-          const duration = note.duration;
-          if (duration === "8" || duration === "16") {
-            currentBeamNotes.push(note);
-            
-            // Create a beam if we have at least 2 notes or this is the last note
-            if (currentBeamNotes.length >= 2 || index === currentStaveNotes.length - 1) {
-              const beam = factory.Beam({ notes: currentBeamNotes });
-              beams.push(beam);
-              currentBeamNotes = [];
-            }
-          } else {
-            // If we have pending beam notes, create a beam before moving on
-            if (currentBeamNotes.length >= 2) {
-              const beam = factory.Beam({ notes: currentBeamNotes });
-              beams.push(beam);
-              currentBeamNotes = [];
-            }
+        // Add notes to this stave until we reach the beat limit
+        while (currentStaveIndex < notes.length) {
+          const note = notes[currentStaveIndex];
+          const beats = getBeats(note.duration);
+          
+          // Check if this note would exceed the beat limit
+          if (currentBeatsInStave + beats > beatsPerStave) {
+            break;
           }
-        });
+          
+          const staveNote = factory.StaveNote({ 
+            keys: Array.isArray(note.key) ? note.key : [note.key], 
+            duration: note.duration,
+            clef: clef,
+            autoStem: true
+          });
+          
+          // Don't try to set beam here, we'll handle beaming later
+          
+          if (currentStaveIndex === isHighlightedIndex) {
+            staveNote.setStyle({ fillStyle: "#F39C12", strokeStyle: "#F39C12" });
+          }
+          
+          currentStaveNotes.push(staveNote);
+          currentBeatsInStave += beats;
+          currentStaveIndex++;
+        }
 
-        // Draw all beams
-        beams.forEach(beam => beam.setContext(context).draw());
+        // Create and draw voice for this stave's notes
+        if (currentStaveNotes.length > 0) {
+          const voice = factory.Voice().addTickables(currentStaveNotes);
+          
+          // Add final barline to the last stave
+          if (i === staveCount - 1) {
+            const barNote = factory.BarNote({ type: "end" });
+            voice.addTickable(barNote);
+          }
+          
+          factory.Formatter().joinVoices([voice]).format([voice], staveWidth);
+          voice.setContext(context).draw();
+
+          // Add beams for eighth notes and shorter durations
+          const beams: Beam[] = [];
+          let currentBeamNotes: StaveNote[] = [];
+          
+          currentStaveNotes.forEach((note: StaveNote, index) => {
+            // Use our original note's duration instead of trying to access from StaveNote
+            const originalNote = notes[index + (currentStaveIndex - currentStaveNotes.length)];
+            const duration = originalNote.duration;
+            
+            if (duration === "8" || duration === "16") {
+              currentBeamNotes.push(note);
+              
+              // Create a beam if we have at least 2 notes or this is the last note
+              if (currentBeamNotes.length >= 2 || index === currentStaveNotes.length - 1) {
+                const beam = factory.Beam({ notes: currentBeamNotes });
+                beams.push(beam);
+                currentBeamNotes = [];
+              }
+            } else {
+              // If we have pending beam notes, create a beam before moving on
+              if (currentBeamNotes.length >= 2) {
+                const beam = factory.Beam({ notes: currentBeamNotes });
+                beams.push(beam);
+                currentBeamNotes = [];
+              }
+            }
+          });
+
+          // Draw all beams
+          beams.forEach(beam => beam.setContext(context).draw());
+        }
+
+        // Reset for next stave
+        currentBeatsInStave = 0;
+        currentStaveNotes = [];
       }
+    };
 
-      // Reset for next stave
-      currentBeatsInStave = 0;
-      currentStaveNotes = [];
-    }
-  }, [notes, highlightedNote]);
+    // Draw treble clef notes
+    drawNotes(trebleNotes, highlightedTrebleIndex, 40, "treble");
+    
+    // Draw bass clef notes
+    drawNotes(bassNotes, highlightedBassIndex, 160, "bass");
+    
+  }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex]);
 
   return (
     <div className="w-full h-full flex items-center justify-center gap-4">
-      <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px' }} />
+      <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px', height: '300px' }} />
       <Button 
         onClick={togglePlaying}
         className="bg-[#F39C12] hover:bg-[#F39C12]/90"

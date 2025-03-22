@@ -19,13 +19,13 @@ export default function TutorPage() {
   const startTime = useRef<number | null>(null);
 
   const handleStartNotePlay = useCallback((note: string, finger: string, hand: string) => {
-    console.log(`Started playing ${note} using ${hand} ${finger}`);
+    // console.log(`Started playing ${note} using ${hand} ${finger}`);
     if (startTime.current === null) return;
     setPlayedNotes((prev) => [...prev, { note: note, startTime: (new Date().getTime() - startTime.current!) / 1000 }]);
   }, [playedNotes, startTime.current]);
 
   const handleEndNotePlay = useCallback((note: string, finger: string, hand: string) => {
-    console.log(`Stopped playing ${note} using ${hand} ${finger}`);
+    // console.log(`Stopped playing ${note} using ${hand} ${finger}`);
     if (startTime.current === null) return;
     setPlayedNotes((prev) => {
       const index = prev.findLastIndex((prevNote) => prevNote.note === note);
@@ -35,7 +35,7 @@ export default function TutorPage() {
   }, [playedNotes, startTime.current]);
 
   const handleStartExpectedNote = useCallback((note: string) => {
-    console.log(`Expecting ${note}`);
+    // console.log(`Expecting ${note}`);
     if (startTime.current === null) return;
     setExpectedNotes((prev) => [...prev, { note: note, startTime: (new Date().getTime() - startTime.current!) / 1000 }]);
   }, [expectedNotes, startTime.current]);
@@ -54,6 +54,8 @@ export default function TutorPage() {
   };
 
   const handleEnd = useCallback(async () => {
+    console.log("handleEnd", expectedNotes, playedNotes);
+
     fetch('/api/get-feedback', {
       method: 'POST',
       headers: {
