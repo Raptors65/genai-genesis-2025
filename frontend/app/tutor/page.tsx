@@ -4,7 +4,8 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { EmotionIcon } from "@/components/EmotionIcon";
 import { MusicNotes } from "@/components/MusicNotes";
 import HandDetection from "@/components/WebcamFeed";
-import { useCallback, useRef, useState } from "react";
+import { NoteDisplay } from "@/components/NoteDisplay";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type Note = {
   note: string;
@@ -16,29 +17,50 @@ export default function TutorPage() {
   const [message, setMessage] = useState("");
   const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
   const [expectedNotes, setExpectedNotes] = useState<Note[]>([]);
+  const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(null);
   const startTime = useRef<number | null>(null);
 
-  const handleStartNotePlay = useCallback((note: string, finger: string, hand: string) => {
-    // console.log(`Started playing ${note} using ${hand} ${finger}`);
-    if (startTime.current === null) return;
-    setPlayedNotes((prev) => [...prev, { note: note, startTime: (new Date().getTime() - startTime.current!) / 1000 }]);
-  }, [playedNotes, startTime.current]);
+  // Initialize startTime on component mount
+  useEffect(() => {
+    startTime.current = new Date().getTime();
+    console.log("startTime initialized:", startTime.current);
+  }, []);
 
-  const handleEndNotePlay = useCallback((note: string, finger: string, hand: string) => {
-    // console.log(`Stopped playing ${note} using ${hand} ${finger}`);
-    if (startTime.current === null) return;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleStartNotePlay = useCallback((note: string, _finger: string, _hand: string) => {
+    console.log("Note played:", note);
+    // Always set currentPlayedNote regardless of startTime
+    setCurrentPlayedNote(note);
+    
+    if (startTime.current === null) {
+      console.log("startTime was null, initializing it");
+      startTime.current = new Date().getTime();
+    }
+    
+    setPlayedNotes((prev) => [...prev, { note: note, startTime: (new Date().getTime() - startTime.current!) / 1000 }]);
+  }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleEndNotePlay = useCallback((note: string, _finger: string, _hand: string) => {
+    console.log("Note ended:", note);
+    setCurrentPlayedNote(null);
+    
+    if (startTime.current === null) {
+      console.log("startTime was null in endNotePlay");
+      return;
+    }
+    
     setPlayedNotes((prev) => {
       const index = prev.findLastIndex((prevNote) => prevNote.note === note);
       if (index === -1) return prev;
       return [...prev.slice(0, index), { ...prev[index], duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime }, ...prev.slice(index + 1)]
     });
-  }, [playedNotes, startTime.current]);
+  }, []);
 
   const handleStartExpectedNote = useCallback((note: string) => {
-    // console.log(`Expecting ${note}`);
     if (startTime.current === null) return;
     setExpectedNotes((prev) => [...prev, { note: note, startTime: (new Date().getTime() - startTime.current!) / 1000 }]);
-  }, [expectedNotes, startTime.current]);
+  }, []);
 
   const handleEndExpectedNote = useCallback((note: string) => {
     if (startTime.current === null) return;
@@ -47,10 +69,11 @@ export default function TutorPage() {
       if (index === -1) return prev;
       return [...prev.slice(0, index), { ...prev[index], duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime }, ...prev.slice(index + 1)]
     });
-  }, [expectedNotes, startTime]);
+  }, []);
 
   const handleStart = () => {
     startTime.current = new Date().getTime();
+    console.log("handleStart called, startTime set to:", startTime.current);
   };
 
   const handleEnd = useCallback(async () => {
@@ -95,9 +118,20 @@ export default function TutorPage() {
           <ResizableHandle/>
           <ResizablePanel defaultSize={67}>
             <div className="h-full bg-white relative">
-              <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
-                <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
-              </div>
+              <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
+                  <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] flex flex-col justify-center">
+                    <h3 className="mb-4 text-lg font-medium">Currently Played Note</h3>
+                    <NoteDisplay currentNote={currentPlayedNote} />
+                  </div>
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel defaultSize={70}>
+                  <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
+                    <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
               <div className="absolute top-4 right-8">
                 <EmotionIcon 
                   emotion="sad" 
