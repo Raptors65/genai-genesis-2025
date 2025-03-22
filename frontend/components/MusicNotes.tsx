@@ -66,12 +66,14 @@ export function MusicNotes({
   useEffect(() => {
     if (isPlaying && highlightedNote === 0) {
       const currentNote = notes[highlightedNote].key;
+      const currentFingering = notes[highlightedNote].fingering;
       if (Array.isArray(currentNote)) {
-        currentNote.forEach(note => {
-          onStartNote(note.replaceAll("/", "").toUpperCase(), "Right", 1);
+        currentNote.forEach((note, index) => {
+          const fingering = Array.isArray(currentFingering) ? currentFingering[index] : (currentFingering as string);
+          onStartNote(note.replaceAll("/", "").toUpperCase(), "Right", parseInt(fingering || "1"));
         });
       } else {
-        onStartNote(currentNote.replaceAll("/", "").toUpperCase(), "Right", 1);
+        onStartNote(currentNote.replaceAll("/", "").toUpperCase(), "Right", parseInt((currentFingering as string) || "1"));
       }
       onStart();
     }
@@ -89,12 +91,14 @@ export function MusicNotes({
 
     const interval = setInterval(() => {
       const currentNote = notes[highlightedNote].key;
+      const currentFingering = notes[highlightedNote].fingering;
       if (Array.isArray(currentNote)) {
-        currentNote.forEach(note => {
-          onEndNote(note.replaceAll("/", "").toUpperCase(), "Right", 1);
+        currentNote.forEach((note, index) => {
+          const fingering = Array.isArray(currentFingering) ? currentFingering[index] : (currentFingering as string);
+          onEndNote(note.replaceAll("/", "").toUpperCase(), "Right", parseInt(fingering || "1"));
         });
       } else {
-        onEndNote(currentNote.replaceAll("/", "").toUpperCase(), "Right", 1);
+        onEndNote(currentNote.replaceAll("/", "").toUpperCase(), "Right", parseInt((currentFingering as string) || "1"));
       }
 
       if (highlightedNote === notes.length - 1) {
@@ -102,12 +106,14 @@ export function MusicNotes({
       }
 
       const nextNote = notes[(highlightedNote + 1) % notes.length].key;
+      const nextFingering = notes[(highlightedNote + 1) % notes.length].fingering;
       if (Array.isArray(nextNote)) {
-        nextNote.forEach(note => {
-          onStartNote(note.replaceAll("/", "").toUpperCase(), "Right", 1);
+        nextNote.forEach((note, index) => {
+          const fingering = Array.isArray(nextFingering) ? nextFingering[index] : (nextFingering as string);
+          onStartNote(note.replaceAll("/", "").toUpperCase(), "Right", parseInt(fingering || "1"));
         });
       } else {
-          onStartNote(nextNote.replaceAll("/", "").toUpperCase(), "Right", 1);
+        onStartNote(nextNote.replaceAll("/", "").toUpperCase(), "Right", parseInt((nextFingering as string) || "1"));
       }
       setHighlightedNote((prev) => (prev + 1) % notes.length);
     }, (60000 / tempo) * getBeats(notes[highlightedNote].duration));
