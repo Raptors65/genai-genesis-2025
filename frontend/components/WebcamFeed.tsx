@@ -1292,21 +1292,23 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
   };
 
   return (
-    <div className="relative mb-4">
-      <video 
-          ref={videoRef} 
-          className="rounded-lg bg-gray-100 scale-x-[-1]" 
-          width="640" 
-          height="480"
-          muted
-          playsInline
-      />
-      <canvas 
-          ref={canvasRef} 
-          className="absolute top-0 left-0 z-10" 
-          width="640" 
-          height="480"
-      />
+    <div className="flex justify-center items-center">
+      <div className="relative mb-4">
+        <video 
+            ref={videoRef} 
+            className="rounded-lg bg-gray-100 scale-x-[-1]" 
+            width="640" 
+            height="480"
+            muted
+            playsInline
+        />
+        <canvas 
+            ref={canvasRef} 
+            className="absolute top-0 left-0 z-10" 
+            width="640" 
+            height="480"
+        />
+      </div>
     </div>
   );
 };
