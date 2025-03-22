@@ -4,6 +4,20 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
 
+// Define the type for piano hotspots
+interface PianoHotspot {
+  x: number;
+  y: number;
+  note: string;
+}
+
+// Add to the global Window interface
+declare global {
+  interface Window {
+    pianoHotspots?: PianoHotspot[];
+  }
+}
+
 // declare global {
 //   interface Window { handDetector: handPoseDetection.HandDetector; }
 // }
@@ -686,24 +700,25 @@ const notesPos: {
 // const verticals = [0.05, 0.06, 0.05, 0.05, 0.045];
 const verticals = [0, 0, 0, 0, 0];
 
-function inside(point: [number, number], vs: [number, number][]) {
-  // ray-casting algorithm based on
-  // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
+// We're not using this function anymore since we switched to hotspot detection
+// function inside(point: [number, number], vs: [number, number][]) {
+//   // ray-casting algorithm based on
+//   // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
   
-  const x = point[0], y = point[1];
+//   const x = point[0], y = point[1];
   
-  let inside = false;
-  for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-      const xi = vs[i][0], yi = vs[i][1];
-      const xj = vs[j][0], yj = vs[j][1];
+//   let inside = false;
+//   for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+//       const xi = vs[i][0], yi = vs[i][1];
+//       const xj = vs[j][0], yj = vs[j][1];
       
-      const intersect = ((yi > y) != (yj > y))
-          && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
-  }
+//       const intersect = ((yi > y) != (yj > y))
+//           && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+//       if (intersect) inside = !inside;
+//   }
   
-  return inside;
-};
+//   return inside;
+// };
 
 const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -851,10 +866,13 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
       ctx!.stroke();
     }
 
-    // draw 2 octaves
-
+    // draw 2 octaves - white keys
     ctx!.strokeStyle = 'white';
     ctx!.lineWidth = 1;
+    
+    // Create an array to store the hotspot positions
+    const whiteKeyHotspots: { x: number, y: number, note: string }[] = [];
+    
     for (let i = 0; i < 15; i++) {
       const leftBotX = i * 40 + 20;
       const leftBotY = botY;
@@ -870,20 +888,29 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
       ctx!.lineTo(leftTopX, leftTopY);
 
       const { note } = notesPos[notesPos.length - i - 1];
+      
+      // Store the hotspot position at the top of the white key
+      whiteKeyHotspots.push({
+        x: leftTopX + 16, // Middle of the key at the top
+        y: topY + 15,    // Slightly below the top edge
+        note: note
+      });
 
-      // console.log(notesBeingPlayed.current, note === 'F4')
       if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === note)) {
-        // console.log("!")
-        ctx!.fillStyle = 'red';
+        ctx!.fillStyle = 'rgba(255, 0, 0, 0.3)';
         ctx!.fill();
       }
 
       ctx!.stroke();
     }
 
-
+    // Draw black keys
     ctx!.strokeStyle = 'black';
     ctx!.fillStyle = 'black';
+    
+    // Create an array to store the black key hotspot positions
+    const blackKeyHotspots: { x: number, y: number, note: string }[] = [];
+    
     let noteI = 15;
     for (let i = 0; i < 15; i++) {
       if ([1, 2, 4, 5, 6].includes(i % 7)) {
@@ -892,11 +919,6 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
 
         const leftTopX = 590 - (i * 36 - 9);
         const leftTopY = (botY - topY) * blackKeyHeightRatio + topY;
-
-        // const leftBotX = Math.abs(i * botWhiteKeyWidth - i * topWhiteKeyWidth) + Math.min(i * botWhiteKeyWidth, i * topWhiteKeyWidth);
-        // const leftBotY = Math.abs(topY - botY) + Math.min(topY, botY);
-
-
 
         ctx!.beginPath();
         ctx!.moveTo(leftTopX, leftTopY);
@@ -907,11 +929,16 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
         ctx!.stroke();
 
         const { note } = notesPos[notesPos.length - noteI - 1];
+        
+        // Store the hotspot position at the top of the black key
+        blackKeyHotspots.push({
+          x: leftTopX - 9, // Middle of the black key
+          y: leftTopY + 15, // Slightly below the top edge
+          note: note
+        });
 
-        // console.log(notesBeingPlayed.current, note === 'F4')
         if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === note)) {
-          // console.log("!")
-          ctx!.fillStyle = 'red';
+          ctx!.fillStyle = 'rgba(255, 0, 0, 0.3)';
           ctx!.fill();
           ctx!.fillStyle = 'black';
         } else {
@@ -920,39 +947,48 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
         noteI++;
       }
     }
-    // console.log(notes)
-
-    // ctx!.fillStyle = "red";
-    // for (const note of notes) {
-    //   ctx?.beginPath();
-    //   ctx!.arc(note.x, note.y, 5, 0, 2 * Math.PI);
-    //   ctx?.fill();
-    // }
+    
+    // Draw all hotspots as red dots
+    ctx!.fillStyle = "red";
+    
+    // Draw white key hotspots
+    for (const hotspot of whiteKeyHotspots) {
+      ctx!.beginPath();
+      ctx!.arc(hotspot.x, hotspot.y, 6, 0, 2 * Math.PI);
+      
+      // Highlight active hotspots
+      if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === hotspot.note)) {
+        ctx!.fillStyle = "yellow";
+        ctx!.fill();
+        ctx!.fillStyle = "red";
+      } else {
+        ctx!.fill();
+      }
+    }
+    
+    // Draw black key hotspots
+    for (const hotspot of blackKeyHotspots) {
+      ctx!.beginPath();
+      ctx!.arc(hotspot.x, hotspot.y, 6, 0, 2 * Math.PI);
+      
+      // Highlight active hotspots
+      if (notesBeingPlayed.current.some((playedNote) => playedNote.note.note === hotspot.note)) {
+        ctx!.fillStyle = "yellow";
+        ctx!.fill();
+        ctx!.fillStyle = "red";
+      } else {
+        ctx!.fill();
+      }
+    }
+    
+    // Store all hotspots in a window variable for note detection
+    window.pianoHotspots = [...whiteKeyHotspots, ...blackKeyHotspots];
     
     // Draw each detected hand
     hands.forEach(hand => {
-      // Draw landmarks
-      const keypoints = hand.keypoints;
-      
-      // Draw connections
-      // const connections = [
-      //   // Thumb
-      //   [0, 1], [1, 2], [2, 3], [3, 4],
-      //   // Index finger
-      //   [0, 5], [5, 6], [6, 7], [7, 8],
-      //   // Middle finger
-      //   [0, 9], [9, 10], [10, 11], [11, 12],
-      //   // Ring finger
-      //   [0, 13], [13, 14], [14, 15], [15, 16],
-      //   // Pinky
-      //   [0, 17], [17, 18], [18, 19], [19, 20],
-      //   // Palm connections
-      //   [5, 9], [9, 13], [13, 17]
-      // ];
-      
       // Draw keypoints
-      for (let i = 4; i < keypoints.length; i += 4) {
-        const { x, y } = keypoints[i];
+      for (let i = 4; i < hand.keypoints.length; i += 4) {
+        const { x, y } = hand.keypoints[i];
         
         ctx!.beginPath();
         ctx!.arc(x, y, 5, 0, 2 * Math.PI);
@@ -987,27 +1023,32 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
       keypoints: k, keypoints3D: hand.keypoints3D![i], handedness: hand.handedness
     })).filter((_, i) => i !== 0 && i % 4 === 0));
 
-    // if (hands.length > 0 && hands[0].keypoints3D) {
-    //   // console.log(hands[0]?.keypoints3D[8].y)
-    // }
-
-    // const playedNotes = notes.filter((note) => fingers.some((finger, i) => {
-    //   const dx = finger.keypoints.x - note.x;
-    //   const dy = finger.keypoints.y - note.y;
-    //   const sqDistance = dx*dx + dy*dy;
-    //   const vertical = finger.keypoints3D.y;
-
-    //   return sqDistance < 50 && vertical > 0.045;
-    // }))
+    // Get the piano hotspots that were created in drawResults
+    const hotspots = window.pianoHotspots || [];
 
     const playedNotes = fingers.flatMap((finger, i) => {
-      const note = notesPos.find((note) => {
+      // Find if the finger is touching any hotspot
+      const hotspot = hotspots.find((spot: { x: number, y: number, note: string }) => {
+        const dx = finger.keypoints.x - spot.x;
+        const dy = finger.keypoints.y - spot.y;
+        // Calculate squared distance (faster than using Math.sqrt for distance)
+        const sqDistance = dx*dx + dy*dy;
+        // Check vertical position (Z-axis)
         const vertical = finger.keypoints3D.y;
-
-        return inside([finger.keypoints.x, finger.keypoints.y], note.polygon) && vertical > verticals[i % 5];
+        
+        // Return true if finger is close to hotspot and pushing down enough
+        return sqDistance < 100 && vertical > verticals[i % 5];
       });
 
-      return note === undefined ? [] : [{note, finger: finger.keypoints.name, hand: finger.handedness}];
+      // Return the note if a hotspot was found, otherwise empty array
+      return hotspot ? [{ 
+        note: { 
+          note: hotspot.note, 
+          polygon: [] // We still need to match the expected structure
+        }, 
+        finger: finger.keypoints.name, 
+        hand: finger.handedness 
+      }] : [];
     });
     
     for (const note of notesBeingPlayed.current) {
