@@ -472,7 +472,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "A5S",
+      "note": "Bb5",
       "polygon": [
           [
               563,
@@ -493,7 +493,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "G4S",
+      "note": "Ab5",
       "polygon": [
           [
               527,
@@ -514,7 +514,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "F4S",
+      "note": "Gb4",
       "polygon": [
           [
               455,
@@ -535,7 +535,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "D4S",
+      "note": "Eb4",
       "polygon": [
           [
               419,
@@ -556,7 +556,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "C4S",
+      "note": "Db4",
       "polygon": [
           [
               383,
@@ -577,7 +577,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "A4S",
+      "note": "Bb4",
       "polygon": [
           [
               311,
@@ -598,7 +598,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "G3S",
+      "note": "Ab4",
       "polygon": [
           [
               275,
@@ -619,7 +619,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "F3S",
+      "note": "Gb3",
       "polygon": [
           [
               203,
@@ -640,7 +640,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "D3S",
+      "note": "Eb3",
       "polygon": [
           [
               167,
@@ -661,7 +661,7 @@ const notesPos: {
       ] as [number, number][]
   },
   {
-      "note": "C3S",
+      "note": "Db3",
       "polygon": [
           [
               131,

@@ -13,6 +13,10 @@ interface Note {
 interface MusicNotesProps {
   tempo?: number;
   notes?: Note[];
+  onStartNote: (note: string) => void;
+  onEndNote: (note: string) => void;
+  onStart: () => void;
+  onEnd: () => void;
 }
 
 export function MusicNotes({ 
@@ -32,7 +36,11 @@ export function MusicNotes({
     { key: "e/4", duration: "8" },
     { key: "e/4", duration: "8" },
     { key: "e/4", duration: "h" }
-  ]
+  ],
+  onStartNote,
+  onEndNote,
+  onStart,
+  onEnd
 }: MusicNotesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const factoryRef = useRef<Factory | null>(null);
@@ -51,15 +59,33 @@ export function MusicNotes({
     }
   };
 
+  const togglePlaying = () => {
+    setIsPlaying((prev) => {
+      if (prev) {
+        return false;
+      } else {
+        onStartNote(notes[highlightedNote].key.replaceAll("/", "").toUpperCase());
+        onStart();
+        return true;
+      }
+    });
+  }
+
   useEffect(() => {
     if (!isPlaying) return;
 
     const interval = setInterval(() => {
+      onEndNote(notes[highlightedNote].key.replaceAll("/", "").toUpperCase());
+      if (highlightedNote === notes.length - 1) {
+        onEnd();
+      }
+
+      onStartNote(notes[(highlightedNote + 1) % notes.length].key.replaceAll("/", "").toUpperCase());
       setHighlightedNote((prev) => (prev + 1) % notes.length);
     }, 750 * getBeats(notes[highlightedNote].duration)); // 750ms * number of beats for current note
 
     return () => clearInterval(interval);
-  }, [isPlaying, notes, highlightedNote]);
+  }, [isPlaying, highlightedNote]);
 
   // Initialize VexFlow factory once
   useEffect(() => {
@@ -208,7 +234,7 @@ export function MusicNotes({
     <div className="w-full h-full flex items-center justify-center gap-4">
       <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px' }} />
       <Button 
-        onClick={() => setIsPlaying(!isPlaying)}
+        onClick={togglePlaying}
         className="bg-[#F39C12] hover:bg-[#F39C12]/90"
       >
         {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
