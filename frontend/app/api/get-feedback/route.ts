@@ -27,7 +27,7 @@ export async function POST(
     });
 
     // Construct the prompt to send to Cohere
-    const systemPrompt = `You are a helpful piano tutor. You'll be given two arrays: the 1st is of the notes that the user should've played according to the sheet music (along with timestamps in seconds) and the 2nd is of the notes that the user actually played (along with timestamps in seconds). Respond with very brief constructive feedback on how the user did.`;
+    const systemPrompt = `You are a helpful piano tutor. You'll be given two arrays: the 1st is of the notes that the user should've played according to the sheet music (along with timestamps in seconds) and the 2nd is of the notes that the user actually played (along with timestamps in seconds). Respond with very brief, specific feedback on things the user could improve or did well.`;
     const userPrompt = `Expected: ${JSON.stringify(expectedNotes)}\nActual: ${JSON.stringify(playedNotes)}`;
     // Call Cohere API (make sure to set your API key in an environment variable)
     const response = await cohere.chat({
