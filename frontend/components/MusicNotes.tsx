@@ -231,7 +231,14 @@ export function MusicNotes({
     if (mode !== "right" && mode !== "both") return;
 
     const handleTrebleNote = () => {
-      const nextTrebleIndex = (highlightedTrebleIndex + 1) % trebleNotes.length;
+      const nextTrebleIndex = highlightedTrebleIndex + 1;
+      
+      // Stop if we've reached the end of the notes
+      if (nextTrebleIndex >= trebleNotes.length) {
+        setIsDemoPlaying(false);
+        return;
+      }
+
       const nextTrebleNote = trebleNotes[nextTrebleIndex].key;
       
       if (Array.isArray(nextTrebleNote)) {
@@ -243,12 +250,6 @@ export function MusicNotes({
       }
 
       setHighlightedTrebleIndex(nextTrebleIndex);
-      
-      // End demo if both clefs have completed their cycles
-      if (nextTrebleIndex === 0 && 
-          (mode === "right" || (mode === "both" && highlightedBassIndex === 0))) {
-        setIsDemoPlaying(false);
-      }
     };
 
     const trebleInterval = (60000 / currentTempo) * getBeats(trebleNotes[highlightedTrebleIndex].duration);
@@ -263,7 +264,14 @@ export function MusicNotes({
     if (mode !== "left" && mode !== "both") return;
 
     const handleBassNote = () => {
-      const nextBassIndex = (highlightedBassIndex + 1) % bassNotes.length;
+      const nextBassIndex = highlightedBassIndex + 1;
+      
+      // Stop if we've reached the end of the notes
+      if (nextBassIndex >= bassNotes.length) {
+        setIsDemoPlaying(false);
+        return;
+      }
+
       const nextBassNote = bassNotes[nextBassIndex].key;
       
       if (Array.isArray(nextBassNote)) {
@@ -275,12 +283,6 @@ export function MusicNotes({
       }
 
       setHighlightedBassIndex(nextBassIndex);
-      
-      // End demo if both clefs have completed their cycles
-      if (nextBassIndex === 0 && 
-          (mode === "left" || (mode === "both" && highlightedTrebleIndex === 0))) {
-        setIsDemoPlaying(false);
-      }
     };
 
     const bassInterval = (60000 / currentTempo) * getBeats(bassNotes[highlightedBassIndex].duration);
