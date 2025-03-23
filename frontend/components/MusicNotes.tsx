@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Factory, Beam, StaveNote } from "vexflow";
 import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Music } from "lucide-react";
 import { Metronome } from "./Metronome";
+import { handleKeyDown } from "./Audio";
 
 interface Note {
   key: string | string[];  // Can be a single note or array of notes
@@ -25,34 +26,8 @@ interface MusicNotesProps {
 
 export function MusicNotes({ 
   tempo = 80, 
-  trebleNotes = [
-    { key: ["c/4", "e/4"], duration: "q", fingering: ["1", "3"] },  // C major chord
-    { key: ["d/4"], duration: "q", fingering: "2" },  // D minor chord
-    { key: ["e/4", "g/4"], duration: "h", fingering: ["3", "5"] },  // E minor chord
-    { key: ["c/4"], duration: "h", fingering: "1" },  // C major chord
-    { key: ["d/4"], duration: "q", fingering: "2" },  // D minor chord
-    { key: ["e/4"], duration: "q", fingering: "3" },  // E minor chord
-    { key: ["d/4", "f/4", "a/4"], duration: "w", fingering: ["2", "4", "5"] },  // D minor chord
-    { key: ["d/4"], duration: "8", fingering: "2" },  // D minor chord
-    { key: ["e/4"], duration: "8", fingering: "3" },  // E minor chord
-    { key: ["e/4"], duration: "8", fingering: "3" },  // E minor chord
-    { key: ["e/4"], duration: "8", fingering: "3" },  // E minor chord
-    { key: ["e/4", "g/4", "b/4"], duration: "h", fingering: ["1", "3", "5"] }   // E minor chord
-  ],
-  bassNotes = [
-    { key: ["c/3"], duration: "q", fingering: "5" },
-    { key: ["g/3"], duration: "q", fingering: "2" },
-    { key: ["c/3"], duration: "h", fingering: "5" },
-    { key: ["f/3"], duration: "q", fingering: "3" },
-    { key: ["g/3"], duration: "q", fingering: "2" },
-    { key: ["c/3"], duration: "h", fingering: "5" },
-    { key: ["f/3"], duration: "w", fingering: "3" },
-    { key: ["g/3"], duration: "8", fingering: "2" },
-    { key: ["a/3"], duration: "8", fingering: "1" },
-    { key: ["b/3"], duration: "8", fingering: "1" },
-    { key: ["a/3"], duration: "8", fingering: "1" },
-    { key: ["e/3"], duration: "h", fingering: "4" }
-  ],
+  trebleNotes,
+  bassNotes,
   onStartNote,
   onEndNote,
   onStart,
@@ -66,7 +41,8 @@ export function MusicNotes({
   const [currentTempo, setCurrentTempo] = useState(tempo);
   const [highlightedTrebleIndex, setHighlightedTrebleIndex] = useState(0);
   const [highlightedBassIndex, setHighlightedBassIndex] = useState(0);
-
+  const [isDemoPlaying, setIsDemoPlaying] = useState(false);
+  
   // Convert note durations to beats
   const getBeats = (duration: string): number => {
     switch (duration) {
@@ -122,6 +98,75 @@ export function MusicNotes({
     });
   }
 
+  // Function to play the demo
+  const playDemo = () => {
+    if (isDemoPlaying) return;
+    
+    setIsDemoPlaying(true);
+    setHighlightedTrebleIndex(0);
+    setHighlightedBassIndex(0);
+    
+    // Start the demo playback
+    playNoteSequence(0, 0);
+  };
+  
+  // Recursive function to play through the notes sequence
+  const playNoteSequence = (trebleIndex: number, bassIndex: number) => {
+    // Play current treble note
+    if (mode === "right" || mode === "both") {
+      const currentTrebleNote = trebleNotes[trebleIndex].key;
+      if (Array.isArray(currentTrebleNote)) {
+        currentTrebleNote.forEach(note => {
+          handleKeyDown(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        handleKeyDown(currentTrebleNote.replaceAll("/", "").toUpperCase());
+      }
+    }
+    
+    // Play current bass note
+    if (mode === "left" || mode === "both") {
+      const currentBassNote = bassNotes[bassIndex].key;
+      if (Array.isArray(currentBassNote)) {
+        currentBassNote.forEach(note => {
+          handleKeyDown(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        handleKeyDown(currentBassNote.replaceAll("/", "").toUpperCase());
+      }
+    }
+    
+    // Update highlighted indices
+    setHighlightedTrebleIndex(trebleIndex);
+    setHighlightedBassIndex(bassIndex);
+    
+    // Calculate the next indices
+    const nextTrebleIndex = (trebleIndex + 1) % trebleNotes.length;
+    const nextBassIndex = (bassIndex + 1) % bassNotes.length;
+    
+    // Calculate the delay for the next note based on the current tempo and note duration
+    const trebleDelay = (60000 / currentTempo) * getBeats(trebleNotes[trebleIndex].duration);
+    const bassDelay = (60000 / currentTempo) * getBeats(bassNotes[bassIndex].duration);
+    
+    // Use the shortest delay if both hands are playing
+    const delay = mode === "both" ? Math.min(trebleDelay, bassDelay) : 
+                 mode === "right" ? trebleDelay : bassDelay;
+    
+    // Check if we've completed the sequence
+    if (nextTrebleIndex === 0 && nextBassIndex === 0) {
+      setTimeout(() => {
+        setIsDemoPlaying(false);
+        setHighlightedTrebleIndex(0);
+        setHighlightedBassIndex(0);
+      }, delay);
+    } else {
+      // Continue to the next note
+      setTimeout(() => {
+        playNoteSequence(nextTrebleIndex, nextBassIndex);
+      }, delay);
+    }
+  };
+
   // Handle treble clef playback
   useEffect(() => {
     if (!isPlaying) return;
@@ -170,7 +215,7 @@ export function MusicNotes({
     const timeoutId = setTimeout(handleTrebleNote, trebleInterval);
 
     return () => clearTimeout(timeoutId);
-  }, [isPlaying, highlightedTrebleIndex, currentTempo]);
+  }, [isPlaying, highlightedTrebleIndex, trebleNotes, tempo]);
 
   // Handle bass clef playback
   useEffect(() => {
@@ -214,7 +259,7 @@ export function MusicNotes({
     const timeoutId = setTimeout(handleBassNote, bassInterval);
 
     return () => clearTimeout(timeoutId);
-  }, [isPlaying, highlightedBassIndex, currentTempo]);
+  }, [isPlaying, highlightedBassIndex, trebleNotes, currentTempo]);
 
   // Initialize VexFlow factory once
   useEffect(() => {
@@ -266,7 +311,7 @@ export function MusicNotes({
       let currentStaveNotes: StaveNote[] = [];
 
       // Create and draw staves and notes as we go
-      for (let i = 0; i < staveCount; i++) {
+      for (let i = 0; i < 4; i++) {
         const stave = factory.Stave({ 
           x: 10 + (i * (staveWidth)) + (i == 0 ? 0 : 50), 
           y: yPosition, 
@@ -383,7 +428,7 @@ export function MusicNotes({
         currentStaveNotes = [];
       }
     };
-
+    
     // Draw treble clef notes
     if (mode === "right" || mode === "both") {
       drawNotes(trebleNotes, highlightedTrebleIndex, 40, "treble");
@@ -394,13 +439,13 @@ export function MusicNotes({
       drawNotes(bassNotes, highlightedBassIndex, 160, "bass");
     }
     
-  }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex]);
+  }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex, mode]);
 
   return (
     <div className="w-full h-fit -mt-2 flex items-center justify-between gap-12">
       <Metronome 
         tempo={currentTempo} 
-        isPlaying={isPlaying} 
+        isPlaying={isPlaying || isDemoPlaying} 
         enabled={metronomeEnabled}
         onToggle={(enabled) => {
           setMetronomeEnabled(enabled);
@@ -410,12 +455,22 @@ export function MusicNotes({
         }}
       />
       <div id="music-notes" ref={containerRef} className="bg-white rounded-lg flex-1" style={{ height: '300px' }} />
-      <Button 
-        onClick={togglePlaying}
-        className="bg-[#F39C12] hover:bg-[#F39C12]/90"
-      >
-        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button 
+          onClick={togglePlaying}
+          className="bg-[#F39C12] hover:bg-[#F39C12]/90"
+        >
+          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        </Button>
+        <Button 
+          onClick={playDemo}
+          disabled={isDemoPlaying}
+          className="bg-[#8E44AD] hover:bg-[#8E44AD]/90 text-white flex items-center"
+        >
+          <Music className="mr-2 h-4 w-4" />
+          Demo
+        </Button>
+      </div>
     </div>
   );
 } 
