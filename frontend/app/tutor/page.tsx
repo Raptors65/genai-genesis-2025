@@ -200,8 +200,8 @@ export default function TutorPage() {
     <div className="h-[calc(100vh-4rem)] bg-white">
       <div className="container mx-auto px-4 h-full flex flex-col">
         {/* Top section with sheet music */}
-        <div className="h-[60%] bg-white flex items-center justify-center">
-          <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] w-full max-w-[1200px]">
+        <div className="h-[45%] bg-white flex items-center justify-center">
+          <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] w-full">
             <div className="flex items-center justify-between -mt-6 mb-2">
               <div className="flex items-center space-x-2">
                 <span className="font-medium">Practice mode:</span>
@@ -233,23 +233,21 @@ export default function TutorPage() {
         </div>
 
         {/* Bottom section with webcam and note display */}
-        <div className="h-[40%] bg-white relative">
-          <div className="h-full flex">
+        <div className="h-[40%] bg-white items-center relative">
+          <div className="flex">
             {/* Note display section */}
-            <div className="w-[155px] bg-white rounded-lg ml-16 h-[calc(100%-2rem)] flex flex-col justify-center">
+            <div className="w-[155px] bg-white rounded-lg ml-40 h-[calc(100%-2rem)] flex flex-col justify-center">
               <NoteDisplay currentNote={currentPlayedNote} />
             </div>
 
-            {/* Webcam section - showing only bottom half */}
-            <div className="w-[60%] bg-white h-[calc(100%-2rem)] overflow-hidden">
-              <div className="h-[200%] translate-y-[-50%]">
-                <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
-              </div>
+            {/* Webcam section - showing bottom half of camera feed */}
+            <div className="w-[50%] bg-white overflow-hidden">
+              <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
             </div>
           </div>
 
           {/* Emotion icon */}
-          <div className="absolute bottom-0 right-[-25px]">
+          <div className="absolute bottom-[-150px] right-[100px]">
             <EmotionIcon 
               emotion="sad" 
               size={48} 
