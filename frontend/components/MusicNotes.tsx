@@ -289,7 +289,7 @@ export function MusicNotes({
         factoryRef.current.getContext().clear();
       }
     };
-  }, [trebleNotes, bassNotes]); // Add dependencies to check for data changes
+  }, [trebleNotes, bassNotes, mode]);
 
   // Handle note highlighting and rendering
   useEffect(() => {
@@ -450,6 +450,7 @@ export function MusicNotes({
       }
     };
     
+    // console.log(mode);
     // Draw treble clef notes
     if (mode === "right" || mode === "both") {
       drawNotes(trebleNotes, highlightedTrebleIndex, 40, "treble");
@@ -493,7 +494,6 @@ export function MusicNotes({
         ref={containerRef} 
         className="bg-white rounded-lg flex-1" 
         style={{ height: '300px' }}
-        key={`music-container-${trebleNotes.length}-${bassNotes.length}-${mode}`} 
       />
       <div className="flex flex-col gap-2">
         <Button 
