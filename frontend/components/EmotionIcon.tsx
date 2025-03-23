@@ -53,7 +53,7 @@ export function EmotionIcon({
           {/* Current message */}
           {message && (
             <div className="mb-2 flex items-center">
-              <div className="relative bg-white border-2 border-gray-200 rounded-lg shadow-md p-3 max-w-[240px]">
+              <div className="relative bg-white border-2 border-gray-200 rounded-lg shadow-md p-3 max-w-[300px]">
                 <p className="text-sm text-gray-700" dangerouslySetInnerHTML={{ __html: message }}></p>
                 <div className="absolute right-0 bottom-4 translate-x-4 w-0 h-0 
                   border-t-[10px] border-t-transparent
@@ -67,7 +67,7 @@ export function EmotionIcon({
           {/* Message history as separate bubbles (no triangles) */}
           {messageHistory.slice(0, -1).map((historyMessage, index) => (
             <div key={index} className="mb-2 flex items-center">
-              <div className="relative bg-white border-2 border-gray-100 rounded-lg shadow-sm p-2 max-w-[240px]">
+              <div className="relative bg-white border-2 border-gray-100 rounded-lg shadow-sm p-2 max-w-[300px]">
                 <p className="text-xs text-gray-500" dangerouslySetInnerHTML={{ __html: historyMessage }}></p>
               </div>
             </div>

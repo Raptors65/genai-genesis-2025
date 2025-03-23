@@ -83,7 +83,7 @@ export function Metronome({
     if (!isPlaying || !enabled) {
       return "bg-gray-300"; // Gray when off
     }
-    return isTicking ? "bg-[#F39C12]" : "bg-[#8e44ad]"; // Flash between orange and purple when on
+    return isTicking ? "bg-[#F39C12]" : "bg-gray-300"; // Flash between orange and purple when on
   };
 
   // Handle switch toggle

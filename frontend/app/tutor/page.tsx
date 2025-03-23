@@ -201,10 +201,10 @@ export default function TutorPage() {
       <div className="container mx-auto px-4 h-full flex flex-col">
         {/* Top section with sheet music */}
         <div className="h-[45%] bg-white flex items-center justify-center">
-          <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] w-full">
+          <div className="bg-white rounded-lg m-4 container ml-36 p-4 h-[calc(100%-2rem)] w-full">
             <div className="flex items-center justify-between -mt-6 mb-2">
               <div className="flex items-center space-x-2">
-                <span className="font-medium">Practice mode:</span>
+                <span className="font-medium">Practice Mode:</span>
                 <ToggleGroup type="single" value={mode} onValueChange={(value: string) => value && setMode(value as "left" | "right" | "both")}>
                   <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
                   <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
@@ -247,7 +247,7 @@ export default function TutorPage() {
           </div>
 
           {/* Emotion icon */}
-          <div className="absolute bottom-[-150px] right-[100px]">
+          <div className="absolute bottom-[-150px] right-[40px]">
             <EmotionIcon 
               emotion="sad" 
               size={48} 
