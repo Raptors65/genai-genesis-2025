@@ -753,6 +753,15 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
   const FINGERTIP_INDICES = [4, 8, 12, 16, 20]; // thumb, index, middle, ring, pinky
   const FINGER_NAMES = ["thumb", "index", "middle", "ring", "pinky"];
 
+  // Add mapping from finger names to piano fingering numbers
+  const FINGER_TO_PIANO: { [key: string]: number } = {
+    "thumb": 1,
+    "index": 2,
+    "middle": 3,
+    "ring": 4,
+    "pinky": 5
+  };
+
   // Initialize webcam
   useEffect(() => {
     async function setupCamera() {
@@ -780,7 +789,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
 
     setupCamera();
 
-    ac.current = new (window.AudioContext || window.webkitAudioContext)();
+    ac.current = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
 
     Soundfont.instrument(ac.current!, "acoustic_grand_piano").then((instrument) => {
       piano.current = instrument;
@@ -1232,7 +1241,8 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
         keypoints: hand.keypoints[fingerIdx], 
         keypoints3D: hand.keypoints3D?.[fingerIdx] || { x: 0, y: 0, z: 0 },
         handedness: hand.handedness,
-        fingerName: FINGER_NAMES[i]
+        fingerName: FINGER_NAMES[i],
+        pianoFinger: FINGER_TO_PIANO[FINGER_NAMES[i]]
       }))
     );
 
@@ -1261,7 +1271,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
           note: hotspot.note, 
           polygon: [] // We still need to match the expected structure
         }, 
-        finger: finger.fingerName, 
+        finger: finger.pianoFinger.toString(), 
         hand: finger.handedness 
       }] : [];
     });
@@ -1293,7 +1303,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
 
   return (
     <div className="flex justify-center items-center">
-      <div className="relative mb-4">
+      <div className="relative mb-4 border-2 rounded-xl">
         <video 
             ref={videoRef} 
             className="rounded-lg bg-gray-100 scale-x-[-1]" 

@@ -1,6 +1,6 @@
 import * as Soundfont from "soundfont-player";
 
-const ac = new (window.AudioContext || window.webkitAudioContext)();
+const ac = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
 
 let piano: Soundfont.Player;
 Soundfont.instrument(ac, "acoustic_grand_piano").then((instrument) => {

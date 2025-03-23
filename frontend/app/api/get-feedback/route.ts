@@ -28,7 +28,7 @@ export async function POST(
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
     // Construct the prompt to send to Cohere
-    const systemPrompt = `You are a nice and helpful piano tutor. Below are two arrays: the 1st is of the notes that the user should've played according to the sheet music (along with timestamps in seconds) and the 2nd is of the notes that the user actually played (along with timestamps in seconds). Respond with very brief, specific feedback in plain text on things the user could improve or did well.`;
+    const systemPrompt = `You are a nice and helpful piano tutor. Below are two arrays: the 1st is of the notes that the user should've played according to the sheet music (along with timestamps in seconds and finger numbers) and the 2nd is of the notes that the user actually played (along with timestamps in seconds and finger number s). Respond with very brief, specific feedback in plain text on things the user could improve or did well.`;
     const userPrompt = `Expected: ${JSON.stringify(expectedNotes)}\nActual: ${JSON.stringify(playedNotes)}`;
     // Call Cohere API (make sure to set your API key in an environment variable)
     const response = await model.generateContent(systemPrompt + "\n" + userPrompt);

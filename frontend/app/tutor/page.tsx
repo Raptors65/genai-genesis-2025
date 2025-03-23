@@ -1,6 +1,5 @@
 "use client";
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { EmotionIcon } from "@/components/EmotionIcon";
 import { MusicNotes } from "@/components/MusicNotes";
 import HandDetection from "@/components/WebcamFeed";
@@ -14,6 +13,8 @@ export type Note = {
   note: string;
   startTime: number;
   duration?: number;
+  hand?: string;
+  finger?: number;
 }
 
 export default function TutorPage() {
@@ -23,33 +24,33 @@ export default function TutorPage() {
   const [mode, setMode] = useState<"left" | "right" | "both">("both");
   const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedBassNotes, setGeneratedBassNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([
-    { key: ["c/3"], duration: "q" },
-    { key: ["g/3"], duration: "q" },
-    { key: ["c/3"], duration: "h" },
-    { key: ["f/3"], duration: "q" },
-    { key: ["g/3"], duration: "q" },
-    { key: ["c/3"], duration: "h" },
-    { key: ["f/3"], duration: "w" },
-    { key: ["g/3"], duration: "8" },
-    { key: ["a/3"], duration: "8" },
-    { key: ["b/3"], duration: "8" },
-    { key: ["a/3"], duration: "8" },
-    { key: ["e/3"], duration: "h" }
+  const [generatedBassNotes, setGeneratedBassNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; fingering?: string | string[]; }[]>([
+    { key: ["c/3"], duration: "q", fingering: "5" },
+    { key: ["g/3"], duration: "q", fingering: "1" },
+    { key: ["c/3"], duration: "h", fingering: "5" },
+    { key: ["f/3"], duration: "q", fingering: "2" },
+    { key: ["g/3"], duration: "q", fingering: "1" },
+    { key: ["c/3"], duration: "h", fingering: "5" },
+    { key: ["f/3"], duration: "w", fingering: "2" },
+    { key: ["g/3"], duration: "8", fingering: "1" },
+    { key: ["a/3"], duration: "8", fingering: "2" },
+    { key: ["b/3"], duration: "8", fingering: "1" },
+    { key: ["a/3"], duration: "8", fingering: "2" },
+    { key: ["e/3"], duration: "h", fingering: "3" }
   ]);
-  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([
-    { key: ["c/4", "e/4" ], duration: "q" },  // C major chord
-    { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4", "g/4"], duration: "h" },  // E minor chord
-    { key: ["c/4"], duration: "h" },  // C major chord
-    { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4"], duration: "q" },  // E minor chord
-    { key: ["d/4", "f/4", "a/4"], duration: "w" },  // D minor chord
-    { key: ["d/4"], duration: "8" },  // D minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4", "g/4", "b/4"], duration: "h" }   // E minor chord
+  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; fingering?: string | string[]; }[]>([
+    { key: ["c/4", "e/4" ], duration: "q", fingering: ["1", "3"] },
+    { key: ["d/4"], duration: "q", fingering: "2" },
+    { key: ["e/4", "g/4"], duration: "h", fingering: ["3", "5"] },
+    { key: ["c/4"], duration: "h", fingering: "1" },
+    { key: ["d/4"], duration: "q", fingering: "2" },
+    { key: ["e/4"], duration: "q", fingering: "3" },
+    { key: ["d/4", "f/4", "a/4"], duration: "w", fingering: ["1", "3", "5"] },
+    { key: ["d/4"], duration: "8", fingering: "2" },
+    { key: ["e/4"], duration: "8", fingering: "3" },
+    { key: ["e/4"], duration: "8", fingering: "3" },
+    { key: ["e/4"], duration: "8", fingering: "3" },
+    { key: ["e/4", "g/4", "b/4"], duration: "h", fingering: ["1", "3", "5"] }
   ]);
   const startTime = useRef<number | null>(null);
 
@@ -100,7 +101,12 @@ export default function TutorPage() {
       startTime.current = new Date().getTime();
     }
     
-    setPlayedNotes((prev) => [...prev, { note: note, startTime: (new Date().getTime() - startTime.current!) / 1000 }]);
+    setPlayedNotes((prev) => [...prev, { 
+      note: note, 
+      startTime: (new Date().getTime() - startTime.current!) / 1000,
+      hand: _hand,
+      finger: parseInt(_finger)
+    }]);
   }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -116,21 +122,37 @@ export default function TutorPage() {
     setPlayedNotes((prev) => {
       const index = prev.findLastIndex((prevNote) => prevNote.note === note);
       if (index === -1) return prev;
-      return [...prev.slice(0, index), { ...prev[index], duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime }, ...prev.slice(index + 1)]
+      return [...prev.slice(0, index), { 
+        ...prev[index], 
+        duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime,
+        hand: _hand,
+        finger: parseInt(_finger)
+      }, ...prev.slice(index + 1)]
     });
   }, []);
 
-  const handleStartExpectedNote = useCallback((note: string) => {
+  const handleStartExpectedNote = useCallback((note: string, hand: string, finger: number) => {
+    console.log(`Expecting ${note} using ${hand} ${finger}`);
     if (startTime.current === null) return;
-    setExpectedNotes((prev) => [...prev, { note: note, startTime: (new Date().getTime() - startTime.current!) / 1000 }]);
+    setExpectedNotes((prev) => [...prev, { 
+      note: note, 
+      startTime: (new Date().getTime() - startTime.current!) / 1000,
+      hand: hand,
+      finger: finger
+    }]);
   }, []);
 
-  const handleEndExpectedNote = useCallback((note: string) => {
+  const handleEndExpectedNote = useCallback((note: string, hand: string, finger: number) => {
     if (startTime.current === null) return;
     setExpectedNotes((prev) => {
       const index = prev.findLastIndex((prevNote) => prevNote.note === note);
       if (index === -1) return prev;
-      return [...prev.slice(0, index), { ...prev[index], duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime }, ...prev.slice(index + 1)]
+      return [...prev.slice(0, index), { 
+        ...prev[index], 
+        duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime,
+        hand: hand,
+        finger: finger
+      }, ...prev.slice(index + 1)]
     });
   }, []);
 
@@ -169,68 +191,66 @@ export default function TutorPage() {
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-white">
-      <div className="container mx-auto px-4 h-full">
-        <ResizablePanelGroup direction="vertical" className="h-full">
-          <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
-            <div className="h-full bg-white">
-              <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
-                <div className="flex items-center justify-between -mt-6 mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium">Practice mode:</span>
-                    <ToggleGroup type="single" value={mode} onValueChange={(value: string) => setMode(value as "left" | "right" | "both")}>
-                      <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
-                      <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
-                      <ToggleGroupItem value="both">Both Hands</ToggleGroupItem>
-                    </ToggleGroup>
-                  </div>
-                  <Button 
-                    onClick={handleGenerateMusic} 
-                    disabled={isGenerating}
-                    className="flex items-center gap-1"
-                  >
-                    {isGenerating && <RefreshCcw className="h-4 w-4 animate-spin" />}
-                    Generate New Music
-                  </Button>
-                </div>
-                <MusicNotes 
-                  onStartNote={handleStartExpectedNote} 
-                  mode={mode} 
-                  onEndNote={handleEndExpectedNote} 
-                  onStart={handleStart} 
-                  onEnd={handleEnd}
-                  trebleNotes={generatedTrebleNotes.length > 0 ? generatedTrebleNotes : undefined}
-                  bassNotes={generatedBassNotes.length > 0 ? generatedBassNotes : undefined}
-                />
+      <div className="container mx-auto px-4 h-full flex flex-col">
+        {/* Top section with sheet music */}
+        <div className="h-[60%] bg-white flex items-center justify-center">
+          <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] w-full max-w-[1200px]">
+            <div className="flex items-center justify-between -mt-6 mb-2">
+              <div className="flex items-center space-x-2">
+                <span className="font-medium">Practice mode:</span>
+                <ToggleGroup type="single" value={mode} onValueChange={(value: string) => value && setMode(value as "left" | "right" | "both")}>
+                  <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
+                  <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
+                  <ToggleGroupItem value="both">Both Hands</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+              <Button 
+                onClick={handleGenerateMusic} 
+                disabled={isGenerating}
+                className="bg-[#8E44AD] hover:bg-[#8E44AD]/90 text-white flex items-center"
+              >
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Generate New Music
+              </Button>
+            </div>
+            <MusicNotes 
+              trebleNotes={generatedTrebleNotes}
+              bassNotes={generatedBassNotes}
+              onStartNote={handleStartExpectedNote} 
+              mode={mode} 
+              onEndNote={handleEndExpectedNote} 
+              onStart={handleStart} 
+              onEnd={handleEnd} 
+            />
+          </div>
+        </div>
+
+        {/* Bottom section with webcam and note display */}
+        <div className="h-[40%] bg-white relative">
+          <div className="h-full flex">
+            {/* Note display section */}
+            <div className="w-[30%] bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] flex flex-col justify-center">
+              <h3 className="mb-4 text-lg font-medium">Currently Played Note</h3>
+              <NoteDisplay currentNote={currentPlayedNote} />
+            </div>
+
+            {/* Webcam section - showing only bottom half */}
+            <div className="w-[70%] bg-white p-4 h-[calc(100%-2rem)] overflow-hidden">
+              <div className="h-[200%] translate-y-[-50%]">
+                <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
               </div>
             </div>
-          </ResizablePanel>
-          <ResizableHandle/>
-          <ResizablePanel defaultSize={67}>
-            <div className="h-full bg-white relative">
-              <ResizablePanelGroup direction="horizontal">
-                <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
-                  <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] flex flex-col justify-center">
-                    <h3 className="mb-4 text-lg font-medium">Currently Played Note</h3>
-                    <NoteDisplay currentNote={currentPlayedNote} />
-                  </div>
-                </ResizablePanel>
-                <ResizableHandle />
-                <ResizablePanel defaultSize={70}>
-                  <div className="bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)]">
-                    <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
-                  </div>
-                </ResizablePanel>
-              </ResizablePanelGroup>
-              <div className="absolute top-4 right-8">
-                <EmotionIcon 
-                  emotion="sad" 
-                  size={48} 
-                  message={message}
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          </div>
+
+          {/* Emotion icon */}
+          <div className="absolute top-4 right-8">
+            <EmotionIcon 
+              emotion="sad" 
+              size={48} 
+              message={message}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

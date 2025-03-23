@@ -10,14 +10,15 @@ import { handleKeyDown } from "./Audio";
 interface Note {
   key: string | string[];  // Can be a single note or array of notes
   duration: "w" | "h" | "q" | "8" | "16"; // w=whole, h=half, q=quarter, 8=eighth, 16=sixteenth
+  fingering?: string | string[];  // Optional fingering for each note
 }
 
 interface MusicNotesProps {
   tempo?: number;
-  trebleNotes: Note[];
-  bassNotes: Note[];
-  onStartNote: (note: string) => void;
-  onEndNote: (note: string) => void;
+  trebleNotes?: Note[];
+  bassNotes?: Note[];
+  onStartNote: (note: string, hand: string, finger: number) => void;
+  onEndNote: (note: string, hand: string, finger: number) => void;
   onStart: () => void;
   onEnd: () => void;
   mode: "left" | "right" | "both";
@@ -25,8 +26,8 @@ interface MusicNotesProps {
 
 export function MusicNotes({ 
   tempo = 80, 
-  trebleNotes,
-  bassNotes,
+  trebleNotes = [],
+  bassNotes = [],
   onStartNote,
   onEndNote,
   onStart,
@@ -65,24 +66,28 @@ export function MusicNotes({
           // Start playing treble notes
           if (mode === "right" || mode === "both") {
             const currentTrebleNote = trebleNotes[highlightedTrebleIndex].key;
+            const currentTrebleFingering = trebleNotes[highlightedTrebleIndex].fingering;
             if (Array.isArray(currentTrebleNote)) {
-              currentTrebleNote.forEach(note => {
-                onStartNote(note.replaceAll("/", "").toUpperCase());
+              currentTrebleNote.forEach((note, index) => {
+                const trebleFingering = Array.isArray(currentTrebleFingering) ? currentTrebleFingering[index] : currentTrebleFingering;
+                onStartNote(note.replaceAll("/", "").toUpperCase(), "Right", parseInt(trebleFingering || "1"));
               });
             } else {
-              onStartNote(currentTrebleNote.replaceAll("/", "").toUpperCase());
+              onStartNote(currentTrebleNote.replaceAll("/", "").toUpperCase(), "Right", parseInt((currentTrebleFingering as string) || "1"));
             }
           }
           
           // Start playing bass notes
           if (mode === "left" || mode === "both") {
             const currentBassNote = bassNotes[highlightedBassIndex].key;
+            const currentBassFingering = bassNotes[highlightedBassIndex].fingering;
             if (Array.isArray(currentBassNote)) {
-              currentBassNote.forEach(note => {
-                onStartNote(note.replaceAll("/", "").toUpperCase());
+              currentBassNote.forEach((note, index) => {
+                const bassFingering = Array.isArray(currentBassFingering) ? currentBassFingering[index] : currentBassFingering;
+                onStartNote(note.replaceAll("/", "").toUpperCase(), "Left", parseInt(bassFingering || "1"));
               });
             } else {
-              onStartNote(currentBassNote.replaceAll("/", "").toUpperCase());
+              onStartNote(currentBassNote.replaceAll("/", "").toUpperCase(), "Left", parseInt((currentBassFingering as string) || "1"));
             }
           }
           
@@ -170,26 +175,30 @@ export function MusicNotes({
     const handleTrebleNote = () => {
       // End current note
       const currentTrebleNote = trebleNotes[highlightedTrebleIndex].key;
+      const currentTrebleFingering = trebleNotes[highlightedTrebleIndex].fingering;
       if (Array.isArray(currentTrebleNote)) {
-        currentTrebleNote.forEach(note => {
-          onEndNote(note.replaceAll("/", "").toUpperCase());
+        currentTrebleNote.forEach((note, index) => {
+          const fingering = Array.isArray(currentTrebleFingering) ? currentTrebleFingering[index] : (currentTrebleFingering as string);
+          onEndNote(note.replaceAll("/", "").toUpperCase(), "Right", parseInt(fingering || "1"));
         });
       } else {
-        onEndNote(currentTrebleNote.replaceAll("/", "").toUpperCase());
+        onEndNote(currentTrebleNote.replaceAll("/", "").toUpperCase(), "Right", parseInt((currentTrebleFingering as string) || "1"));
       }
 
       // Move to next note
       const nextTrebleIndex = (highlightedTrebleIndex + 1) % trebleNotes.length;
       const nextTrebleNote = trebleNotes[nextTrebleIndex].key;
+      const nextTrebleFingering = trebleNotes[nextTrebleIndex].fingering;
       
       // Start next note
       if (mode === "right" || mode === "both") {
           if (Array.isArray(nextTrebleNote)) {
-            nextTrebleNote.forEach(note => {
-              onStartNote(note.replaceAll("/", "").toUpperCase());
+            nextTrebleNote.forEach((note, index) => {
+              const fingering = Array.isArray(nextTrebleFingering) ? nextTrebleFingering[index] : (nextTrebleFingering as string);
+              onStartNote(note.replaceAll("/", "").toUpperCase(), "Right", parseInt(fingering || "1"));
           });
         } else {
-          onStartNote(nextTrebleNote.replaceAll("/", "").toUpperCase());
+          onStartNote(nextTrebleNote.replaceAll("/", "").toUpperCase(), "Right", parseInt((nextTrebleFingering as string) || "1"));
         }
       }
 
@@ -216,26 +225,29 @@ export function MusicNotes({
     const handleBassNote = () => {
       // End current note
       const currentBassNote = bassNotes[highlightedBassIndex].key;
+      const currentBassFingering = bassNotes[highlightedBassIndex].fingering;
       if (Array.isArray(currentBassNote)) {
-        currentBassNote.forEach(note => {
-          onEndNote(note.replaceAll("/", "").toUpperCase());
+        currentBassNote.forEach((note, index) => {
+          const fingering = Array.isArray(currentBassFingering) ? currentBassFingering[index] : (currentBassFingering as string);
+          onEndNote(note.replaceAll("/", "").toUpperCase(), "Left", parseInt(fingering || "1"));
         });
       } else {
-        onEndNote(currentBassNote.replaceAll("/", "").toUpperCase());
+        onEndNote(currentBassNote.replaceAll("/", "").toUpperCase(), "Left", parseInt((currentBassFingering as string) || "1"));
       }
 
       // Move to next note
       const nextBassIndex = (highlightedBassIndex + 1) % bassNotes.length;
       const nextBassNote = bassNotes[nextBassIndex].key;
-      
+      const nextBassFingering = bassNotes[nextBassIndex].fingering;
       // Start next note
       if (mode === "left" || mode === "both") {
         if (Array.isArray(nextBassNote)) {
-          nextBassNote.forEach(note => {
-            onStartNote(note.replaceAll("/", "").toUpperCase());
+          nextBassNote.forEach((note, index) => {
+            const fingering = Array.isArray(nextBassFingering) ? nextBassFingering[index] : (nextBassFingering as string);
+            onStartNote(note.replaceAll("/", "").toUpperCase(), "Left", parseInt(fingering || "1"));
           });
         } else {
-          onStartNote(nextBassNote.replaceAll("/", "").toUpperCase());
+          onStartNote(nextBassNote.replaceAll("/", "").toUpperCase(), "Left", parseInt((nextBassFingering as string) || "1"));
         }
       }
 
@@ -252,6 +264,14 @@ export function MusicNotes({
   // Initialize VexFlow factory once
   useEffect(() => {
     if (!containerRef.current) return;
+    
+    // Only create factory if we have valid data
+    const hasTrebleNotes = trebleNotes && trebleNotes.length > 0;
+    const hasBassNotes = bassNotes && bassNotes.length > 0;
+    
+    if (!hasTrebleNotes && !hasBassNotes) {
+      return;
+    }
 
     // Create a VexFlow factory
     factoryRef.current = new Factory({
@@ -264,7 +284,7 @@ export function MusicNotes({
         factoryRef.current.getContext().clear();
       }
     };
-  }, []); // Empty dependency array - only run once
+  }, [trebleNotes, bassNotes]); // Add dependencies to check for data changes
 
   // Handle note highlighting and rendering
   useEffect(() => {
@@ -332,7 +352,30 @@ export function MusicNotes({
             autoStem: true
           });
           
-          // Don't try to set beam here, we'll handle beaming later
+          // Add fingering annotations if provided
+          if (note.fingering) {
+            if (Array.isArray(note.key)) {
+              // For chords, add fingering to each note
+              note.key.forEach((_, index) => {
+                const fingering = Array.isArray(note.fingering) ? note.fingering[index] : note.fingering;
+                staveNote.addModifier(factory.Annotation({ 
+                  text: fingering,
+                  vJustify: "top"  // Position above the note
+                }), index);
+              });
+            } else {
+              // For single notes
+              staveNote.addModifier(factory.Annotation({ 
+                text: Array.isArray(note.fingering) ? note.fingering[0] : note.fingering,
+                vJustify: "top"  // Position above the note
+              }));
+            }
+          }
+          
+          // Remove flags from eighth notes and shorter durations
+          if (note.duration === "8" || note.duration === "16") {
+            (staveNote as any).setBeam(null);
+          }
           
           if (currentStaveIndex === isHighlightedIndex) {
             staveNote.setStyle({ fillStyle: "#F39C12", strokeStyle: "#F39C12" });
@@ -407,7 +450,7 @@ export function MusicNotes({
   }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex, mode]);
 
   return (
-    <div className="w-full h-fit -mt-2 flex items-center justify-center gap-4">
+    <div className="w-full h-fit -mt-2 flex items-center justify-between gap-12">
       <Metronome 
         tempo={currentTempo} 
         isPlaying={isPlaying || isDemoPlaying} 
@@ -419,7 +462,7 @@ export function MusicNotes({
           setCurrentTempo(newTempo);
         }}
       />
-      <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px', height: '300px' }} />
+      <div id="music-notes" ref={containerRef} className="bg-white rounded-lg flex-1" style={{ height: '300px' }} />
       <div className="flex flex-col gap-2">
         <Button 
           onClick={togglePlaying}
