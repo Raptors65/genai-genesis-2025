@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Factory, Beam, StaveNote } from "vexflow";
 import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Music } from "lucide-react";
 import { Metronome } from "./Metronome";
+import { handleKeyDown } from "./Audio";
 
 interface Note {
   key: string | string[];  // Can be a single note or array of notes
@@ -39,6 +40,8 @@ export function MusicNotes({
   const [currentTempo, setCurrentTempo] = useState(tempo);
   const [highlightedTrebleIndex, setHighlightedTrebleIndex] = useState(0);
   const [highlightedBassIndex, setHighlightedBassIndex] = useState(0);
+  const [isDemoPlaying, setIsDemoPlaying] = useState(false);
+  
   // Convert note durations to beats
   const getBeats = (duration: string): number => {
     switch (duration) {
@@ -89,6 +92,75 @@ export function MusicNotes({
       }
     });
   }
+
+  // Function to play the demo
+  const playDemo = () => {
+    if (isDemoPlaying) return;
+    
+    setIsDemoPlaying(true);
+    setHighlightedTrebleIndex(0);
+    setHighlightedBassIndex(0);
+    
+    // Start the demo playback
+    playNoteSequence(0, 0);
+  };
+  
+  // Recursive function to play through the notes sequence
+  const playNoteSequence = (trebleIndex: number, bassIndex: number) => {
+    // Play current treble note
+    if (mode === "right" || mode === "both") {
+      const currentTrebleNote = trebleNotes[trebleIndex].key;
+      if (Array.isArray(currentTrebleNote)) {
+        currentTrebleNote.forEach(note => {
+          handleKeyDown(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        handleKeyDown(currentTrebleNote.replaceAll("/", "").toUpperCase());
+      }
+    }
+    
+    // Play current bass note
+    if (mode === "left" || mode === "both") {
+      const currentBassNote = bassNotes[bassIndex].key;
+      if (Array.isArray(currentBassNote)) {
+        currentBassNote.forEach(note => {
+          handleKeyDown(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        handleKeyDown(currentBassNote.replaceAll("/", "").toUpperCase());
+      }
+    }
+    
+    // Update highlighted indices
+    setHighlightedTrebleIndex(trebleIndex);
+    setHighlightedBassIndex(bassIndex);
+    
+    // Calculate the next indices
+    const nextTrebleIndex = (trebleIndex + 1) % trebleNotes.length;
+    const nextBassIndex = (bassIndex + 1) % bassNotes.length;
+    
+    // Calculate the delay for the next note based on the current tempo and note duration
+    const trebleDelay = (60000 / currentTempo) * getBeats(trebleNotes[trebleIndex].duration);
+    const bassDelay = (60000 / currentTempo) * getBeats(bassNotes[bassIndex].duration);
+    
+    // Use the shortest delay if both hands are playing
+    const delay = mode === "both" ? Math.min(trebleDelay, bassDelay) : 
+                 mode === "right" ? trebleDelay : bassDelay;
+    
+    // Check if we've completed the sequence
+    if (nextTrebleIndex === 0 && nextBassIndex === 0) {
+      setTimeout(() => {
+        setIsDemoPlaying(false);
+        setHighlightedTrebleIndex(0);
+        setHighlightedBassIndex(0);
+      }, delay);
+    } else {
+      // Continue to the next note
+      setTimeout(() => {
+        playNoteSequence(nextTrebleIndex, nextBassIndex);
+      }, delay);
+    }
+  };
 
   // Handle treble clef playback
   useEffect(() => {
@@ -338,7 +410,7 @@ export function MusicNotes({
     <div className="w-full h-fit -mt-2 flex items-center justify-center gap-4">
       <Metronome 
         tempo={currentTempo} 
-        isPlaying={isPlaying} 
+        isPlaying={isPlaying || isDemoPlaying} 
         enabled={metronomeEnabled}
         onToggle={(enabled) => {
           setMetronomeEnabled(enabled);
@@ -348,12 +420,22 @@ export function MusicNotes({
         }}
       />
       <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px', height: '300px' }} />
-      <Button 
-        onClick={togglePlaying}
-        className="bg-[#F39C12] hover:bg-[#F39C12]/90"
-      >
-        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button 
+          onClick={togglePlaying}
+          className="bg-[#F39C12] hover:bg-[#F39C12]/90"
+        >
+          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        </Button>
+        <Button 
+          onClick={playDemo}
+          disabled={isDemoPlaying}
+          className="bg-[#8E44AD] hover:bg-[#8E44AD]/90 text-white flex items-center"
+        >
+          <Music className="mr-2 h-4 w-4" />
+          Demo
+        </Button>
+      </div>
     </div>
   );
 } 
