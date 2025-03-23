@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 
 export function Navbar() {
   const [isVisible, setIsVisible] = useState(true);
+  const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
   const isTutorPage = pathname === "/tutor";
 
@@ -17,15 +18,31 @@ export function Navbar() {
     let timeoutId: NodeJS.Timeout;
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Show navbar when mouse is in top 64px (height of navbar)
-      const shouldShow = e.clientY <= 64;
+      // Check if mouse is in top 64px (height of navbar)
+      const isInTopArea = e.clientY <= 64;
       
-      if (shouldShow) {
-        setIsVisible(true);
-        // Clear any existing timeout
-        if (timeoutId) clearTimeout(timeoutId);
+      if (isInTopArea) {
+        // Clear hide timeout if it exists
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        
+        // Start hover timer if not already started
+        if (!hoverTimer) {
+          const timer = setTimeout(() => {
+            setIsVisible(true);
+          }, 5000); // Show after 5 seconds of hovering
+          
+          setHoverTimer(timer);
+        }
       } else {
-        // Set a timeout to hide the navbar after 1 second of mouse being away
+        // Clear hover timer if mouse leaves top area
+        if (hoverTimer) {
+          clearTimeout(hoverTimer);
+          setHoverTimer(null);
+        }
+        
+        // Set timeout to hide navbar
         timeoutId = setTimeout(() => {
           setIsVisible(false);
         }, 1000);
@@ -37,8 +54,9 @@ export function Navbar() {
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       if (timeoutId) clearTimeout(timeoutId);
+      if (hoverTimer) clearTimeout(hoverTimer);
     };
-  }, [isTutorPage]);
+  }, [isTutorPage, hoverTimer]);
 
   return (
     <nav className={`border-b fixed top-0 left-0 right-0 bg-white z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
