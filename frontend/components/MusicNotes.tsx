@@ -331,9 +331,11 @@ export function MusicNotes({
       let currentBeatsInStave = 0;
       let currentStaveNotes: StaveNote[] = [];
 
+      staveCount = 4;
+
       // Create and draw staves and notes as we go
-      for (let i = 0; i < 4; i++) {
-        const stave = factory.Stave({ 
+      for (let i = 0; i < staveCount; i++) {
+        const stave = factory.Stave({
           x: 10 + (i * (staveWidth)) + (i == 0 ? 0 : 50), 
           y: yPosition, 
           width: staveWidth + (i == 0 ? 50 : 0)
@@ -409,8 +411,31 @@ export function MusicNotes({
             voice.addTickable(barNote);
           }
           
-          factory.Formatter().joinVoices([voice]).format([voice], staveWidth);
-          voice.setContext(context).draw();
+          try {
+            if (voice.getTicksUsed().numerator < 16384) {
+              let noteDuration;
+              if (voice.getTicksUsed().numerator === 15360) {
+                noteDuration = "16";
+              } else if (voice.getTicksUsed().numerator === 14336) {
+                noteDuration = "8";
+              } else if (voice.getTicksUsed().numerator === 12288) {
+                noteDuration = "q";
+              } else if (voice.getTicksUsed().numerator === 8192) {
+                noteDuration = "h";
+              } else  {
+                noteDuration = "w";
+              }
+              voice.addTickable(factory.StaveNote({
+                keys: ["c/4"],
+                duration: noteDuration,
+                clef: clef
+              }));
+            }
+            factory.Formatter().joinVoices([voice]).format([voice], staveWidth);
+            voice.setContext(context).draw();
+          } catch (error) {
+            console.error("Error formatting or drawing voice:", error);
+          }
 
           // Add beams for eighth notes and shorter durations
           const beams: Beam[] = [];
@@ -425,7 +450,7 @@ export function MusicNotes({
               currentBeamNotes.push(note);
               
               // Create a beam if we have at least 2 notes or this is the last note
-              if (currentBeamNotes.length >= 2 || index === currentStaveNotes.length - 1) {
+              if (currentBeamNotes.length >= 2) {
                 const beam = factory.Beam({ notes: currentBeamNotes });
                 beams.push(beam);
                 currentBeamNotes = [];

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw } from "lucide-react";
+import clsx from "clsx";
 
 export type Note = {
   note: string;
@@ -64,6 +65,7 @@ export default function TutorPage() {
   const handleGenerateMusic = async () => {
     setIsGenerating(true);
     try {
+      console.log("Generating music");
       const response = await fetch('/api/generate-music', {
         method: 'GET',
       });
@@ -214,7 +216,7 @@ export default function TutorPage() {
                 disabled={isGenerating}
                 className="bg-[#8E44AD] hover:bg-[#8E44AD]/90 text-white flex items-center"
               >
-                <RefreshCcw className="mr-2 h-4 w-4" />
+                <RefreshCcw className={clsx("mr-2 h-4 w-4", { "animate-spin": isGenerating })} />
                 Generate New Music
               </Button>
             </div>
