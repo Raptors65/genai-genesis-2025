@@ -273,6 +273,11 @@ export function MusicNotes({
       return;
     }
 
+    // Clear any existing content first to avoid duplicate SVGs
+    if (containerRef.current.firstChild) {
+      containerRef.current.innerHTML = '';
+    }
+
     // Create a VexFlow factory
     factoryRef.current = new Factory({
       renderer: { elementId: containerRef.current.id, width: 900, height: 300 },
@@ -289,10 +294,18 @@ export function MusicNotes({
   // Handle note highlighting and rendering
   useEffect(() => {
     if (!factoryRef.current) return;
-
+    
     const factory = factoryRef.current;
     const context = factory.getContext();
     context.clear();
+    
+    // Check if there are notes to render
+    const hasTrebleNotes = mode !== "left" && trebleNotes && trebleNotes.length > 0;
+    const hasBassNotes = mode !== "right" && bassNotes && bassNotes.length > 0;
+    
+    if (!hasTrebleNotes && !hasBassNotes) {
+      return;  // Don't render if there are no notes
+    }
 
     const drawNotes = (notes: Note[], isHighlightedIndex: number, yPosition: number, clef: "treble" | "bass") => {
       // Calculate total beats and number of staves needed
@@ -449,6 +462,19 @@ export function MusicNotes({
     
   }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex, mode]);
 
+  // Handle component cleanup when unmounted
+  useEffect(() => {
+    return () => {
+      // Clean up any SVG elements when component unmounts
+      if (factoryRef.current) {
+        factoryRef.current.getContext().clear();
+      }
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+    };
+  }, []);
+
   return (
     <div className="w-full h-fit -mt-2 flex items-center justify-between gap-12">
       <Metronome 
@@ -462,7 +488,13 @@ export function MusicNotes({
           setCurrentTempo(newTempo);
         }}
       />
-      <div id="music-notes" ref={containerRef} className="bg-white rounded-lg flex-1" style={{ height: '300px' }} />
+      <div 
+        id="music-notes" 
+        ref={containerRef} 
+        className="bg-white rounded-lg flex-1" 
+        style={{ height: '300px' }}
+        key={`music-container-${trebleNotes.length}-${bassNotes.length}-${mode}`} 
+      />
       <div className="flex flex-col gap-2">
         <Button 
           onClick={togglePlaying}
