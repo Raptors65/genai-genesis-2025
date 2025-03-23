@@ -16,7 +16,7 @@ export type Note = {
   duration?: number;
   hand?: string;
   finger?: number;
-}
+};
 
 export default function TutorPage() {
   const [message, setMessage] = useState("");
@@ -24,9 +24,17 @@ export default function TutorPage() {
   const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
   const [expectedNotes, setExpectedNotes] = useState<Note[]>([]);
   const [mode, setMode] = useState<"left" | "right" | "both">("both");
-  const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(null);
+  const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(
+    null
+  );
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedBassNotes, setGeneratedBassNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; fingering?: string | string[]; }[]>([
+  const [generatedBassNotes, setGeneratedBassNotes] = useState<
+    {
+      key: string | string[];
+      duration: "w" | "h" | "q" | "8" | "16";
+      fingering?: string | string[];
+    }[]
+  >([
     { key: ["c/3"], duration: "q", fingering: "5" },
     { key: ["g/3"], duration: "q", fingering: "1" },
     { key: ["c/3"], duration: "h", fingering: "5" },
@@ -38,10 +46,16 @@ export default function TutorPage() {
     { key: ["a/3"], duration: "8", fingering: "2" },
     { key: ["b/3"], duration: "8", fingering: "1" },
     { key: ["a/3"], duration: "8", fingering: "2" },
-    { key: ["e/3"], duration: "h", fingering: "3" }
+    { key: ["e/3"], duration: "h", fingering: "3" },
   ]);
-  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; fingering?: string | string[]; }[]>([
-    { key: ["c/4", "e/4" ], duration: "q", fingering: ["1", "3"] },
+  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<
+    {
+      key: string | string[];
+      duration: "w" | "h" | "q" | "8" | "16";
+      fingering?: string | string[];
+    }[]
+  >([
+    { key: ["c/4", "e/4"], duration: "q", fingering: ["1", "3"] },
     { key: ["d/4"], duration: "q", fingering: "2" },
     { key: ["e/4", "g/4"], duration: "h", fingering: ["3", "5"] },
     { key: ["c/4"], duration: "h", fingering: "1" },
@@ -52,7 +66,7 @@ export default function TutorPage() {
     { key: ["e/4"], duration: "8", fingering: "3" },
     { key: ["e/4"], duration: "8", fingering: "3" },
     { key: ["e/4"], duration: "8", fingering: "3" },
-    { key: ["e/4", "g/4", "b/4"], duration: "h", fingering: ["1", "3", "5"] }
+    { key: ["e/4", "g/4", "b/4"], duration: "h", fingering: ["1", "3", "5"] },
   ]);
   const startTime = useRef<number | null>(null);
 
@@ -66,98 +80,128 @@ export default function TutorPage() {
     setIsGenerating(true);
     try {
       console.log("Generating music");
-      const response = await fetch('/api/generate-music', {
-        method: 'GET',
+      const response = await fetch("/api/generate-music", {
+        method: "GET",
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         // Reset existing notes
         setPlayedNotes([]);
 
         const jsonData = JSON.parse(data[0].text);
-        
+
         setGeneratedTrebleNotes(jsonData.trebleNotes);
         setGeneratedBassNotes(jsonData.bassNotes);
         console.log(jsonData);
-        
+
         // Reset timer
         startTime.current = new Date().getTime();
       } else {
-        console.error('Failed to generate music');
+        console.error("Failed to generate music");
       }
     } catch (error) {
-      console.error('Error generating music:', error);
+      console.error("Error generating music:", error);
     } finally {
       setIsGenerating(false);
     }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleStartNotePlay = useCallback((note: string, _finger: string, _hand: string) => {
-    console.log("Note played:", note);
-    // Always set currentPlayedNote regardless of startTime
-    setCurrentPlayedNote(note);
-    
-    if (startTime.current === null) {
-      console.log("startTime was null, initializing it");
-      startTime.current = new Date().getTime();
-    }
-    
-    setPlayedNotes((prev) => [...prev, { 
-      note: note, 
-      startTime: (new Date().getTime() - startTime.current!) / 1000,
-      hand: _hand,
-      finger: parseInt(_finger)
-    }]);
-  }, []);
+  const handleStartNotePlay = useCallback(
+    (note: string, _finger: string, _hand: string) => {
+      console.log("Note played:", note);
+      // Always set currentPlayedNote regardless of startTime
+      setCurrentPlayedNote(note);
+
+      if (startTime.current === null) {
+        console.log("startTime was null, initializing it");
+        startTime.current = new Date().getTime();
+      }
+
+      setPlayedNotes((prev) => [
+        ...prev,
+        {
+          note: note,
+          startTime: (new Date().getTime() - startTime.current!) / 1000,
+          hand: _hand,
+          finger: parseInt(_finger),
+        },
+      ]);
+    },
+    []
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleEndNotePlay = useCallback((note: string, _finger: string, _hand: string) => {
-    console.log("Note ended:", note);
-    setCurrentPlayedNote(null);
-    
-    if (startTime.current === null) {
-      console.log("startTime was null in endNotePlay");
-      return;
-    }
-    
-    setPlayedNotes((prev) => {
-      const index = prev.findLastIndex((prevNote) => prevNote.note === note);
-      if (index === -1) return prev;
-      return [...prev.slice(0, index), { 
-        ...prev[index], 
-        duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime,
-        hand: _hand,
-        finger: parseInt(_finger)
-      }, ...prev.slice(index + 1)]
-    });
-  }, []);
+  const handleEndNotePlay = useCallback(
+    (note: string, _finger: string, _hand: string) => {
+      console.log("Note ended:", note);
+      setCurrentPlayedNote(null);
 
-  const handleStartExpectedNote = useCallback((note: string, hand: string, finger: number) => {
-    console.log(`Expecting ${note} using ${hand} ${finger}`);
-    if (startTime.current === null) return;
-    setExpectedNotes((prev) => [...prev, { 
-      note: note, 
-      startTime: (new Date().getTime() - startTime.current!) / 1000,
-      hand: hand,
-      finger: finger
-    }]);
-  }, []);
+      if (startTime.current === null) {
+        console.log("startTime was null in endNotePlay");
+        return;
+      }
 
-  const handleEndExpectedNote = useCallback((note: string, hand: string, finger: number) => {
-    if (startTime.current === null) return;
-    setExpectedNotes((prev) => {
-      const index = prev.findLastIndex((prevNote) => prevNote.note === note);
-      if (index === -1) return prev;
-      return [...prev.slice(0, index), { 
-        ...prev[index], 
-        duration: (new Date().getTime() - startTime.current!) / 1000 - prev[index].startTime,
-        hand: hand,
-        finger: finger
-      }, ...prev.slice(index + 1)]
-    });
-  }, []);
+      setPlayedNotes((prev) => {
+        const index = prev.findLastIndex((prevNote) => prevNote.note === note);
+        if (index === -1) return prev;
+        return [
+          ...prev.slice(0, index),
+          {
+            ...prev[index],
+            duration:
+              (new Date().getTime() - startTime.current!) / 1000 -
+              prev[index].startTime,
+            hand: _hand,
+            finger: parseInt(_finger),
+          },
+          ...prev.slice(index + 1),
+        ];
+      });
+    },
+    []
+  );
+
+  const handleStartExpectedNote = useCallback(
+    (note: string, hand: string, finger: number) => {
+      console.log(`Expecting ${note} using ${hand} ${finger}`);
+      if (startTime.current === null) return;
+      setExpectedNotes((prev) => [
+        ...prev,
+        {
+          note: note,
+          startTime: (new Date().getTime() - startTime.current!) / 1000,
+          hand: hand,
+          finger: finger,
+        },
+      ]);
+    },
+    []
+  );
+
+  const handleEndExpectedNote = useCallback(
+    (note: string, hand: string, finger: number) => {
+      if (startTime.current === null) return;
+      setExpectedNotes((prev) => {
+        const index = prev.findLastIndex((prevNote) => prevNote.note === note);
+        if (index === -1) return prev;
+        return [
+          ...prev.slice(0, index),
+          {
+            ...prev[index],
+            duration:
+              (new Date().getTime() - startTime.current!) / 1000 -
+              prev[index].startTime,
+            hand: hand,
+            finger: finger,
+          },
+          ...prev.slice(index + 1),
+        ];
+      });
+    },
+    []
+  );
 
   const handleStart = () => {
     startTime.current = new Date().getTime();
@@ -167,33 +211,32 @@ export default function TutorPage() {
   const handleEnd = useCallback(async () => {
     console.log("handleEnd", expectedNotes, playedNotes);
 
-    fetch('/api/get-feedback', {
-      method: 'POST',
+    fetch("/api/get-feedback", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         expectedNotes,
-        playedNotes
-      })
+        playedNotes,
+      }),
     }).then(async (response) => {
       if (!response.ok) {
         return;
       }
-  
+
       const data = await response.json();
-      
+
       // Update the current message
       setMessage(data.response);
-      
+
       // Add the new message to history
-      setMessageHistory(prev => [...prev, data.response]);
+      setMessageHistory((prev) => [...prev, data.response]);
     });
 
     setExpectedNotes([]);
     setPlayedNotes([]);
     startTime.current = new Date().getTime();
-    
   }, [expectedNotes, playedNotes]);
 
   return (
@@ -205,29 +248,39 @@ export default function TutorPage() {
             <div className="flex items-center justify-between -mt-6 mb-2">
               <div className="flex items-center space-x-2">
                 <span className="font-medium">Practice mode:</span>
-                <ToggleGroup type="single" value={mode} onValueChange={(value: string) => value && setMode(value as "left" | "right" | "both")}>
+                <ToggleGroup
+                  type="single"
+                  value={mode}
+                  onValueChange={(value: string) =>
+                    value && setMode(value as "left" | "right" | "both")
+                  }
+                >
                   <ToggleGroupItem value="left">Left Hand</ToggleGroupItem>
                   <ToggleGroupItem value="right">Right Hand</ToggleGroupItem>
                   <ToggleGroupItem value="both">Both Hands</ToggleGroupItem>
                 </ToggleGroup>
               </div>
-              <Button 
-                onClick={handleGenerateMusic} 
+              <Button
+                onClick={handleGenerateMusic}
                 disabled={isGenerating}
                 className="bg-[#8E44AD] hover:bg-[#8E44AD]/90 text-white flex items-center"
               >
-                <RefreshCcw className={clsx("mr-2 h-4 w-4", { "animate-spin": isGenerating })} />
+                <RefreshCcw
+                  className={clsx("mr-2 h-4 w-4", {
+                    "animate-spin": isGenerating,
+                  })}
+                />
                 Generate New Music
               </Button>
             </div>
-            <MusicNotes 
+            <MusicNotes
               trebleNotes={generatedTrebleNotes}
               bassNotes={generatedBassNotes}
-              onStartNote={handleStartExpectedNote} 
-              mode={mode} 
-              onEndNote={handleEndExpectedNote} 
-              onStart={handleStart} 
-              onEnd={handleEnd} 
+              onStartNote={handleStartExpectedNote}
+              mode={mode}
+              onEndNote={handleEndExpectedNote}
+              onStart={handleStart}
+              onEnd={handleEnd}
             />
           </div>
         </div>
@@ -242,15 +295,18 @@ export default function TutorPage() {
 
             {/* Webcam section - showing bottom half of camera feed */}
             <div className="w-[50%] bg-white overflow-hidden">
-              <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
+              <HandDetection
+                onStartNotePlay={handleStartNotePlay}
+                onEndNotePlay={handleEndNotePlay}
+              />
             </div>
           </div>
 
           {/* Emotion icon */}
           <div className="absolute bottom-[-150px] right-[100px]">
-            <EmotionIcon 
-              emotion="sad" 
-              size={48} 
+            <EmotionIcon
+              emotion="sad"
+              size={48}
               message={message}
               messageHistory={messageHistory}
             />
@@ -259,4 +315,4 @@ export default function TutorPage() {
       </div>
     </div>
   );
-} 
+}

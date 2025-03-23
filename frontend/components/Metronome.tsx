@@ -13,13 +13,13 @@ interface MetronomeProps {
   onTempoChange?: (tempo: number) => void;
 }
 
-export function Metronome({ 
-  tempo, 
-  isPlaying, 
-  enabled, 
-  onTick, 
+export function Metronome({
+  tempo,
+  isPlaying,
+  enabled,
+  onTick,
   onToggle,
-  onTempoChange
+  onTempoChange,
 }: MetronomeProps) {
   const [isTicking, setIsTicking] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -44,7 +44,10 @@ export function Metronome({
     const gainNode = gainNodeRef.current;
 
     oscillator.type = "square";
-    oscillator.frequency.setValueAtTime(880, audioContextRef.current.currentTime);
+    oscillator.frequency.setValueAtTime(
+      880,
+      audioContextRef.current.currentTime
+    );
 
     gainNode.gain.setValueAtTime(0.5, audioContextRef.current.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(
@@ -70,7 +73,7 @@ export function Metronome({
       if (onTick) onTick(); // Trigger callback if provided
 
       playTickSound(); // Play the custom sound
-    }, (60000 / tempo)); // Convert tempo (BPM) to ms per beat
+    }, 60000 / tempo); // Convert tempo (BPM) to ms per beat
 
     return () => {
       clearInterval(interval);
@@ -95,7 +98,7 @@ export function Metronome({
 
   // Handle tempo slider change
   const handleTempoChange = (_event: Event, value: number | number[]) => {
-    if (onTempoChange && typeof value === 'number') {
+    if (onTempoChange && typeof value === "number") {
       onTempoChange(value);
     }
   };
@@ -108,19 +111,19 @@ export function Metronome({
         checked={enabled}
         onCheckedChange={handleSwitchChange}
         className={`w-[42px] h-[25px] rounded-full relative ${
-          enabled ? 'bg-[#F39C12]' : 'bg-gray-300'
+          enabled ? "bg-[#F39C12]" : "bg-gray-300"
         } outline-none cursor-pointer`}
       >
         <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
       </Switch.Root>
-      
+
       <div className="flex flex-col items-center">
         <div
           className={`w-8 h-8 rounded-full ${getIndicatorColor()} transition-colors duration-200 mb-1`}
         />
         <p className="text-sm text-gray-600">{tempo} BPM</p>
       </div>
-      
+
       {/* Tempo Slider */}
       <Box sx={{ width: 140 }}>
         <Slider
@@ -134,14 +137,14 @@ export function Metronome({
           max={180}
           size="small"
           sx={{
-            color: '#F39C12',
-            '& .MuiSlider-thumb': {
+            color: "#F39C12",
+            "& .MuiSlider-thumb": {
               width: 16,
               height: 16,
             },
-            '& .MuiSlider-valueLabel': {
-              backgroundColor: '#F39C12',
-            }
+            "& .MuiSlider-valueLabel": {
+              backgroundColor: "#F39C12",
+            },
           }}
         />
       </Box>
