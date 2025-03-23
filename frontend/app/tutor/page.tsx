@@ -19,6 +19,7 @@ export type Note = {
 
 export default function TutorPage() {
   const [message, setMessage] = useState("");
+  const [messageHistory, setMessageHistory] = useState<string[]>([]);
   const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
   const [expectedNotes, setExpectedNotes] = useState<Note[]>([]);
   const [mode, setMode] = useState<"left" | "right" | "both">("both");
@@ -179,8 +180,12 @@ export default function TutorPage() {
       }
   
       const data = await response.json();
-  
+      
+      // Update the current message
       setMessage(data.response);
+      
+      // Add the new message to history
+      setMessageHistory(prev => [...prev, data.response]);
     });
 
     setExpectedNotes([]);
@@ -229,12 +234,12 @@ export default function TutorPage() {
         <div className="h-[40%] bg-white relative">
           <div className="h-full flex">
             {/* Note display section */}
-            <div className="w-[30%] bg-white rounded-lg m-4 p-4 h-[calc(100%-2rem)] flex flex-col justify-center">
+            <div className="w-[155px] bg-white rounded-lg ml-8 h-[calc(100%-2rem)] flex flex-col justify-center">
               <NoteDisplay currentNote={currentPlayedNote} />
             </div>
 
             {/* Webcam section - showing only bottom half */}
-            <div className="w-[70%] bg-white p-4 h-[calc(100%-2rem)] overflow-hidden">
+            <div className="w-[60%] bg-white h-[calc(100%-2rem)] overflow-hidden">
               <div className="h-[200%] translate-y-[-50%]">
                 <HandDetection onStartNotePlay={handleStartNotePlay} onEndNotePlay={handleEndNotePlay} />
               </div>
@@ -242,11 +247,12 @@ export default function TutorPage() {
           </div>
 
           {/* Emotion icon */}
-          <div className="absolute top-4 right-8">
+          <div className="absolute bottom-0 right-[-25px]">
             <EmotionIcon 
               emotion="sad" 
               size={48} 
               message={message}
+              messageHistory={messageHistory}
             />
           </div>
         </div>

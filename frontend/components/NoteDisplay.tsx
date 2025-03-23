@@ -71,14 +71,18 @@ export function NoteDisplay({ currentNote }: NoteDisplayProps) {
       // Initialize renderer
       const renderer = new Renderer(svgContainer, Renderer.Backends.SVG);
       
-      // Size our SVG
-      renderer.resize(300, 150);
+      // Get container width to make it responsive
+      const containerWidth = containerRef.current.clientWidth;
+      const containerHeight = 150;
+      
+      // Size our SVG to fit the container
+      renderer.resize(containerWidth, containerHeight);
       
       // Get the drawing context
       const context = renderer.getContext();
       
       // Create and draw the staff (stave)
-      const stave = new Stave(10, 20, 280);
+      const stave = new Stave(10, 20, containerWidth - 20);
       stave.addClef('treble');
       stave.setContext(context).draw();
       
@@ -116,7 +120,7 @@ export function NoteDisplay({ currentNote }: NoteDisplayProps) {
         voice.addTickable(note);
         
         // Format and draw
-        new Formatter().joinVoices([voice]).format([voice], 250);
+        new Formatter().joinVoices([voice]).format([voice], containerWidth - 100);
         voice.draw(context, stave);
       }
       
@@ -132,12 +136,12 @@ export function NoteDisplay({ currentNote }: NoteDisplayProps) {
   }, [currentNote]);
 
   return (
-    <div className="p-2 bg-white rounded-lg shadow-sm">
+    <div className="p-2 bg-white rounded-lg shadow-sm w-full max-w-full overflow-hidden">
       <div 
         ref={containerRef}
-        className="w-full h-[150px] flex justify-center items-center"
+        className="flex justify-center items-center w-full overflow-hidden"
       ></div>
-      <div className="text-sm text-center mt-2 text-gray-500">
+      <div className="text-sm text-center text-gray-500 mt-2 truncate">
         Current note: {currentNote || "-"}
       </div>
     </div>
