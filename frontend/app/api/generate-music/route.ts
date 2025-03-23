@@ -19,65 +19,64 @@ const systemPrompt = `You are a skilled music writer. Write the specified number
 const userPrompt = `Write 6 bars of music, separated into trebleNotes and bassNotes.`;
 
 const schema = {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "trebleNotes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "array",
-            "items": {
-              "type": "string",
+  $schema: "http://json-schema.org/draft-07/schema#",
+  type: "object",
+  properties: {
+    trebleNotes: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          key: {
+            type: "array",
+            items: {
+              type: "string",
             },
           },
-          "duration": {
-            "type": "string",
-            "enum": ["w", "h", "q", "8", "16"]
+          duration: {
+            type: "string",
+            enum: ["w", "h", "q", "8", "16"],
           },
-          "fingering": {
-            "type": "number",
-            "enum": [1, 2, 3, 4, 5]
-          }
+          fingering: {
+            type: "number",
+            enum: [1, 2, 3, 4, 5],
+          },
         },
-        "required": ["key", "duration", "fingering"],
-        "additionalProperties": false
-      }
+        required: ["key", "duration", "fingering"],
+        additionalProperties: false,
+      },
     },
-    "bassNotes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "array",
-            "items": {
-              "type": "string",
+    bassNotes: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          key: {
+            type: "array",
+            items: {
+              type: "string",
             },
           },
-          "duration": {
-            "type": "string",
-            "enum": ["w", "h", "q", "8", "16"]
+          duration: {
+            type: "string",
+            enum: ["w", "h", "q", "8", "16"],
           },
-          "fingering": {
-            "type": "number",
-            "enum": [1, 2, 3, 4, 5]
-          }
+          fingering: {
+            type: "number",
+            enum: [1, 2, 3, 4, 5],
+          },
         },
-        "required": ["key", "duration", "fingering"],
-        "additionalProperties": false
-      }
-    }
+        required: ["key", "duration", "fingering"],
+        additionalProperties: false,
+      },
+    },
   },
-  "required": ["trebleNotes", "bassNotes"],
-  "additionalProperties": false
+  required: ["trebleNotes", "bassNotes"],
+  additionalProperties: false,
 };
 
 export async function GET() {
   try {
-
     const cohere = new CohereClientV2({
       token: process.env.COHERE_API_KEY,
     });
@@ -85,17 +84,17 @@ export async function GET() {
       model: "command-a-03-2025",
       messages: [
         {
-          role: 'system',
-          content: systemPrompt
+          role: "system",
+          content: systemPrompt,
         },
         {
-          role: 'user',
-          content: userPrompt
-        }
+          role: "user",
+          content: userPrompt,
+        },
       ],
       responseFormat: {
         type: "json_object",
-        jsonSchema: schema
+        jsonSchema: schema,
       },
     });
 
@@ -103,7 +102,7 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching feedback from Gemini:", error);
     return new Response("Internal server error", {
-      status: 500
+      status: 500,
     });
   }
 }

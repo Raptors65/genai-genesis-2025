@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface PianoKeyProps {
   isBlack: boolean;
@@ -8,14 +8,12 @@ interface PianoKeyProps {
 const PianoKey = ({ isBlack, isActive }: PianoKeyProps) => {
   return (
     <div
-      className={`relative ${isBlack ? 'w-8 h-32 -mx-4 z-10' : 'w-12 h-48'}`}
+      className={`relative ${isBlack ? "w-8 h-32 -mx-4 z-10" : "w-12 h-48"}`}
     >
       <div
         className={`absolute w-full h-full rounded-b-lg transition-transform duration-100 ${
-          isBlack
-            ? 'bg-black'
-            : 'bg-white border border-gray-800'
-        } ${isActive ? 'translate-y-3' : ''}`}
+          isBlack ? "bg-black" : "bg-white border border-gray-800"
+        } ${isActive ? "translate-y-3" : ""}`}
       />
     </div>
   );
@@ -28,16 +26,16 @@ export const Piano = () => {
     const keys = [];
     for (let octave = 0; octave < octaves; octave++) {
       keys.push({ isBlack: false }); // White
-      keys.push({ isBlack: true });  // Black
+      keys.push({ isBlack: true }); // Black
       keys.push({ isBlack: false }); // White
-      keys.push({ isBlack: true });  // Black
+      keys.push({ isBlack: true }); // Black
       keys.push({ isBlack: false }); // White
       keys.push({ isBlack: false }); // White
-      keys.push({ isBlack: true });  // Black
+      keys.push({ isBlack: true }); // Black
       keys.push({ isBlack: false }); // White
-      keys.push({ isBlack: true });  // Black
+      keys.push({ isBlack: true }); // Black
       keys.push({ isBlack: false }); // White
-      keys.push({ isBlack: true });  // Black
+      keys.push({ isBlack: true }); // Black
       keys.push({ isBlack: false }); // White
     }
     return keys;
@@ -66,4 +64,4 @@ export const Piano = () => {
       </div>
     </div>
   );
-}; 
+};

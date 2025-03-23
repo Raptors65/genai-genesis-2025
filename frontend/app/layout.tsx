@@ -19,9 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Navbar />
-        <main className={isTutorPage ? "" : "pt-16"}>
-          {children}
-        </main>
+        <main className={isTutorPage ? "" : "pt-16"}>{children}</main>
       </body>
     </html>
   );
