@@ -24,33 +24,33 @@ export default function TutorPage() {
   const [mode, setMode] = useState<"left" | "right" | "both">("both");
   const [currentPlayedNote, setCurrentPlayedNote] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedBassNotes, setGeneratedBassNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([
-    { key: ["c/3"], duration: "q" },
-    { key: ["g/3"], duration: "q" },
-    { key: ["c/3"], duration: "h" },
-    { key: ["f/3"], duration: "q" },
-    { key: ["g/3"], duration: "q" },
-    { key: ["c/3"], duration: "h" },
-    { key: ["f/3"], duration: "w" },
-    { key: ["g/3"], duration: "8" },
-    { key: ["a/3"], duration: "8" },
-    { key: ["b/3"], duration: "8" },
-    { key: ["a/3"], duration: "8" },
-    { key: ["e/3"], duration: "h" }
+  const [generatedBassNotes, setGeneratedBassNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; fingering?: string | string[]; }[]>([
+    { key: ["c/3"], duration: "q", fingering: "5" },
+    { key: ["g/3"], duration: "q", fingering: "1" },
+    { key: ["c/3"], duration: "h", fingering: "5" },
+    { key: ["f/3"], duration: "q", fingering: "2" },
+    { key: ["g/3"], duration: "q", fingering: "1" },
+    { key: ["c/3"], duration: "h", fingering: "5" },
+    { key: ["f/3"], duration: "w", fingering: "2" },
+    { key: ["g/3"], duration: "8", fingering: "1" },
+    { key: ["a/3"], duration: "8", fingering: "2" },
+    { key: ["b/3"], duration: "8", fingering: "1" },
+    { key: ["a/3"], duration: "8", fingering: "2" },
+    { key: ["e/3"], duration: "h", fingering: "3" }
   ]);
-  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; }[]>([
-    { key: ["c/4", "e/4" ], duration: "q" },  // C major chord
-    { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4", "g/4"], duration: "h" },  // E minor chord
-    { key: ["c/4"], duration: "h" },  // C major chord
-    { key: ["d/4"], duration: "q" },  // D minor chord
-    { key: ["e/4"], duration: "q" },  // E minor chord
-    { key: ["d/4", "f/4", "a/4"], duration: "w" },  // D minor chord
-    { key: ["d/4"], duration: "8" },  // D minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4"], duration: "8" },  // E minor chord
-    { key: ["e/4", "g/4", "b/4"], duration: "h" }   // E minor chord
+  const [generatedTrebleNotes, setGeneratedTrebleNotes] = useState<{ key: string | string[]; duration: "w" | "h" | "q" | "8" | "16"; fingering?: string | string[]; }[]>([
+    { key: ["c/4", "e/4" ], duration: "q", fingering: ["1", "3"] },
+    { key: ["d/4"], duration: "q", fingering: "2" },
+    { key: ["e/4", "g/4"], duration: "h", fingering: ["3", "5"] },
+    { key: ["c/4"], duration: "h", fingering: "1" },
+    { key: ["d/4"], duration: "q", fingering: "2" },
+    { key: ["e/4"], duration: "q", fingering: "3" },
+    { key: ["d/4", "f/4", "a/4"], duration: "w", fingering: ["1", "3", "5"] },
+    { key: ["d/4"], duration: "8", fingering: "2" },
+    { key: ["e/4"], duration: "8", fingering: "3" },
+    { key: ["e/4"], duration: "8", fingering: "3" },
+    { key: ["e/4"], duration: "8", fingering: "3" },
+    { key: ["e/4", "g/4", "b/4"], duration: "h", fingering: ["1", "3", "5"] }
   ]);
   const startTime = useRef<number | null>(null);
 

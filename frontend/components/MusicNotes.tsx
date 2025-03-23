@@ -26,8 +26,8 @@ interface MusicNotesProps {
 
 export function MusicNotes({ 
   tempo = 80, 
-  trebleNotes,
-  bassNotes,
+  trebleNotes = [],
+  bassNotes = [],
   onStartNote,
   onEndNote,
   onStart,
@@ -264,6 +264,14 @@ export function MusicNotes({
   // Initialize VexFlow factory once
   useEffect(() => {
     if (!containerRef.current) return;
+    
+    // Only create factory if we have valid data
+    const hasTrebleNotes = trebleNotes && trebleNotes.length > 0;
+    const hasBassNotes = bassNotes && bassNotes.length > 0;
+    
+    if (!hasTrebleNotes && !hasBassNotes) {
+      return;
+    }
 
     // Create a VexFlow factory
     factoryRef.current = new Factory({
@@ -276,7 +284,7 @@ export function MusicNotes({
         factoryRef.current.getContext().clear();
       }
     };
-  }, []); // Empty dependency array - only run once
+  }, [trebleNotes, bassNotes]); // Add dependencies to check for data changes
 
   // Handle note highlighting and rendering
   useEffect(() => {
