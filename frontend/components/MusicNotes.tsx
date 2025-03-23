@@ -40,18 +40,18 @@ export function MusicNotes({
     { key: ["e/4", "g/4", "b/4"], duration: "h", fingering: ["1", "3", "5"] }   // E minor chord
   ],
   bassNotes = [
-    { key: ["c/3"], duration: "q" },
-    { key: ["g/3"], duration: "q" },
-    { key: ["c/3"], duration: "h" },
-    { key: ["f/3"], duration: "q" },
-    { key: ["g/3"], duration: "q" },
-    { key: ["c/3"], duration: "h" },
-    { key: ["f/3"], duration: "w" },
-    { key: ["g/3"], duration: "8" },
-    { key: ["a/3"], duration: "8" },
-    { key: ["b/3"], duration: "8" },
-    { key: ["a/3"], duration: "8" },
-    { key: ["e/3"], duration: "h" }
+    { key: ["c/3"], duration: "q", fingering: "5" },
+    { key: ["g/3"], duration: "q", fingering: "2" },
+    { key: ["c/3"], duration: "h", fingering: "5" },
+    { key: ["f/3"], duration: "q", fingering: "3" },
+    { key: ["g/3"], duration: "q", fingering: "2" },
+    { key: ["c/3"], duration: "h", fingering: "5" },
+    { key: ["f/3"], duration: "w", fingering: "3" },
+    { key: ["g/3"], duration: "8", fingering: "2" },
+    { key: ["a/3"], duration: "8", fingering: "1" },
+    { key: ["b/3"], duration: "8", fingering: "1" },
+    { key: ["a/3"], duration: "8", fingering: "1" },
+    { key: ["e/3"], duration: "h", fingering: "4" }
   ],
   onStartNote,
   onEndNote,
@@ -299,27 +299,30 @@ export function MusicNotes({
             autoStem: true
           });
           
-        // Add fingering annotations if provided
-        if (note.fingering) {
-          if (Array.isArray(note.key)) {
-            // For chords, add fingering to each note
-            note.key.forEach((_, index) => {
-              const fingering = Array.isArray(note.fingering) ? note.fingering[index] : note.fingering;
+          // Add fingering annotations if provided
+          if (note.fingering) {
+            if (Array.isArray(note.key)) {
+              // For chords, add fingering to each note
+              note.key.forEach((_, index) => {
+                const fingering = Array.isArray(note.fingering) ? note.fingering[index] : note.fingering;
+                staveNote.addModifier(factory.Annotation({ 
+                  text: fingering,
+                  vJustify: "top"  // Position above the note
+                }), index);
+              });
+            } else {
+              // For single notes
               staveNote.addModifier(factory.Annotation({ 
-                text: fingering,
+                text: Array.isArray(note.fingering) ? note.fingering[0] : note.fingering,
                 vJustify: "top"  // Position above the note
-              }), index);
-            });
-          } else {
-            // For single notes
-            staveNote.addModifier(factory.Annotation({ 
-              text: Array.isArray(note.fingering) ? note.fingering[0] : note.fingering,
-              vJustify: "top"  // Position above the note
-            }));
+              }));
+            }
           }
-        }
-        
-          // Don't try to set beam here, we'll handle beaming later
+          
+          // Remove flags from eighth notes and shorter durations
+          if (note.duration === "8" || note.duration === "16") {
+            (staveNote as any).setBeam(null);
+          }
           
           if (currentStaveIndex === isHighlightedIndex) {
             staveNote.setStyle({ fillStyle: "#F39C12", strokeStyle: "#F39C12" });
@@ -394,7 +397,7 @@ export function MusicNotes({
   }, [trebleNotes, bassNotes, highlightedTrebleIndex, highlightedBassIndex]);
 
   return (
-    <div className="w-full h-fit -mt-2 flex items-center justify-center gap-4">
+    <div className="w-full h-fit -mt-2 flex items-center justify-between gap-12">
       <Metronome 
         tempo={currentTempo} 
         isPlaying={isPlaying} 
@@ -406,7 +409,7 @@ export function MusicNotes({
           setCurrentTempo(newTempo);
         }}
       />
-      <div id="music-notes" ref={containerRef} className="bg-white rounded-lg" style={{ width: '1220px', height: '300px' }} />
+      <div id="music-notes" ref={containerRef} className="bg-white rounded-lg flex-1" style={{ height: '300px' }} />
       <Button 
         onClick={togglePlaying}
         className="bg-[#F39C12] hover:bg-[#F39C12]/90"
