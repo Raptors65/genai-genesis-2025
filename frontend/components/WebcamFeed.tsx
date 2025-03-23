@@ -39,134 +39,6 @@ const blackKeyHeightRatio = 0.5;
 const topY = pianoEdges[0][0][1];
 const botY = pianoEdges[0][1][1];
 
-// const notes = [
-//   {
-//     x: 558, // width 34
-//     y: 360,
-//     note: "C3"
-//   },
-//   {
-//     x: 567, // width 38
-//     y: 400,
-//     note: "C3F"
-//   },
-//   {
-//     x: 524,
-//     y: 360,
-//     note: "D3"
-//   },
-//   {
-//     x: 529,
-//     y: 400,
-//     note: "D3F"
-//   },
-//   {
-//     x: 490,
-//     y: 360,
-//     note: "E3"
-//   },
-//   {
-//     x: 456,
-//     y: 360,
-//     note: "F3"
-//   },
-//   {
-//     x: 453,
-//     y: 400,
-//     note: "F3F"
-//   },
-//   {
-//     x: 422,
-//     y: 360,
-//     note: "G3"
-//   },
-//   {
-//     x: 415,
-//     y: 400,
-//     note: "G3F"
-//   },
-//   {
-//     x: 388,
-//     y: 360,
-//     note: "A4"
-//   },
-//   {
-//     x: 377,
-//     y: 400,
-//     note: "A4S"
-//   },
-//   {
-//     x: 354,
-//     y: 360,
-//     note: "B4"
-//   },
-//   {
-//     x: 320,
-//     y: 360,
-//     note: "C4"
-//   },
-//   {
-//     x: 301,
-//     y: 400,
-//     note: "C4S"
-//   },
-//   {
-//     x: 286,
-//     y: 360,
-//     note: "D4"
-//   },
-//   {
-//     x: 263,
-//     y: 400,
-//     note: "D4S"
-//   },
-//   {
-//     x: 252,
-//     y: 360,
-//     note: "E4"
-//   },
-//   {
-//     x: 218,
-//     y: 360,
-//     note: "F4"
-//   },
-//   {
-//     x: 187,
-//     y: 400,
-//     note: "F4S"
-//   },
-//   {
-//     x: 184,
-//     y: 360,
-//     note: "G4"
-//   },
-//   {
-//     x: 149,
-//     y: 400,
-//     note: "G4S"
-//   },
-//   {
-//     x: 150,
-//     y: 360,
-//     note: "A4"
-//   },
-//   {
-//     x: 111,
-//     y: 400,
-//     note: "A4S"
-//   },
-//   {
-//     x: 116,
-//     y: 360,
-//     note: "B4"
-//   },
-//   {
-//     x: 82,
-//     y: 360,
-//     note: "C4"
-//   },
-// ]
-
 const notesPos: {
   note: string;
   polygon: [number, number][]
@@ -698,29 +570,6 @@ const notesPos: {
   }
 ].toReversed();
 
-// Remove or comment out verticals since we're not using it anymore
-// const verticals = [0, 0, 0, 0, 0];
-
-// We're not using this function anymore since we switched to hotspot detection
-// function inside(point: [number, number], vs: [number, number][]) {
-//   // ray-casting algorithm based on
-//   // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
-  
-//   const x = point[0], y = point[1];
-  
-//   let inside = false;
-//   for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-//       const xi = vs[i][0], yi = vs[i][1];
-//       const xj = vs[j][0], yj = vs[j][1];
-      
-//       const intersect = ((yi > y) != (yj > y))
-//           && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-//       if (intersect) inside = !inside;
-//   }
-  
-//   return inside;
-// };
-
 const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -734,9 +583,6 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
     onStartNotePlay(note, finger, hand);
   }, [piano, onStartNotePlay]);
   
-  // const [isDetecting, setIsDetecting] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
-  // const [landmarks, setLandmarks] = useState<handPoseDetection.Hand[]>([]);
   const notesBeingPlayed = useRef<{
     note: {
         note: string;
@@ -835,17 +681,7 @@ const HandDetection = ({ onStartNotePlay, onEndNotePlay }: HandDetectionProps) =
     if (isModelLoaded && videoRef.current) {
       detectHands();
     }
-  }, [isModelLoaded, videoRef.current])
-
-  // Start/stop hand detection
-  // const toggleDetection = () => {
-  //   if (isDetecting) {
-  //     setIsDetecting(false);
-  //   } else if (isModelLoaded && videoRef.current) {
-  //     setIsDetecting(true);
-  //     detectHands();
-  //   }
-  // };
+  }, [isModelLoaded, videoRef.current]);
 
   // Draw hand landmarks on canvas
   const drawResults = (hands: handPoseDetection.Hand[]) => {
