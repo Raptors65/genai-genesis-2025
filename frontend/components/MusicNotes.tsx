@@ -170,6 +170,7 @@ export function MusicNotes({
       // Call onEnd if both clefs have completed their cycles
       if (nextTrebleIndex === 0) {
         onEnd();
+        togglePlaying();
       }
     };
 
