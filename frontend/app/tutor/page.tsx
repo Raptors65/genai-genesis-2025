@@ -236,7 +236,7 @@ export default function TutorPage() {
         <div className="h-[40%] bg-white relative">
           <div className="h-full flex">
             {/* Note display section */}
-            <div className="w-[155px] bg-white rounded-lg ml-8 h-[calc(100%-2rem)] flex flex-col justify-center">
+            <div className="w-[155px] bg-white rounded-lg ml-16 h-[calc(100%-2rem)] flex flex-col justify-center">
               <NoteDisplay currentNote={currentPlayedNote} />
             </div>
 
