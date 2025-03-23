@@ -357,9 +357,9 @@ const HandDetection = ({
     }
 
     setupCamera();
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ac.current = new ((window as any).AudioContext ||
-      (window as any).webkitAudioContext)();
+      (window as any).webkitAudioContext)(); // eslint-disable-line @typescript-eslint/no-explicit-any
 
     Soundfont.instrument(ac.current!, "acoustic_grand_piano").then(
       (instrument) => {
@@ -828,8 +828,8 @@ const HandDetection = ({
 
   // Hand detection loop with smoothing
   const detectHands = async () => {
-    // eslint-disable-next-line
     if (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       !(window as any).handDetector ||
       !videoRef.current ||
       !canvasRef.current

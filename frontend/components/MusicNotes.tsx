@@ -511,6 +511,7 @@ export function MusicNotes({
 
           // Remove flags from eighth notes and shorter durations
           if (note.duration === "8" || note.duration === "16") {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (staveNote as any).setBeam(null);
           }
 

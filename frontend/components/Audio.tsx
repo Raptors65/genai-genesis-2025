@@ -1,7 +1,7 @@
 import * as Soundfont from "soundfont-player";
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ac = new ((window as any).AudioContext ||
-  (window as any).webkitAudioContext)();
+  (window as any).webkitAudioContext)(); // eslint-disable-line @typescript-eslint/no-explicit-any
 
 let piano: Soundfont.Player;
 Soundfont.instrument(ac, "acoustic_grand_piano").then((instrument) => {
