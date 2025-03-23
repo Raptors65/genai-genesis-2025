@@ -1,10 +1,14 @@
 # Pianowise
 
-An interactive web application that helps users learn to play piano through real-time feedback and guided practice.
+An interactive web application that helps users learn to play piano anywhere, anytime through real-time feedback and guided practice.
 
 ## Overview
 
-This application uses computer vision to detect hand movements and provides real-time feedback on piano playing technique. It displays sheet music with fingering annotations and gives emotional feedback based on performance accuracy.
+This application uses computer vision to detect hand movements and provides real-time feedback on piano playing technique. It displays sheet music with fingering annotations and gives feedback based on performance accuracy.
+
+![image](https://github.com/user-attachments/assets/56468008-92f9-4106-bd12-29be87af8ba8)
+
+![image](https://github.com/user-attachments/assets/753dd252-517d-41b5-bed0-3352633464ff)
 
 ## Features
 
@@ -74,7 +78,7 @@ This application uses computer vision to detect hand movements and provides real
 
 1. **Select Practice Mode**: Choose to practice with left hand, right hand, or both hands
 2. **Play the Notes**: Follow the highlighted notes and fingerings on the sheet music
-3. **Get Feedback**: Receive emotional feedback on your performance accuracy
+3. **Get Feedback**: Receive AI-backed feedback on your performance accuracy
 4. **Generate New Music**: Click "Generate New Music" to practice different pieces
 5. **Use Demo**: Click the "Demo" button to hear how the piece should sound
 6. **Adjust Tempo**: Use the metronome controls to set your preferred practice speed
