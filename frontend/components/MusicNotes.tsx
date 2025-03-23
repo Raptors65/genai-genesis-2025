@@ -106,15 +106,9 @@ export function MusicNotes({
     setHighlightedTrebleIndex(0);
     setHighlightedBassIndex(0);
     
-    // Start the demo playback
-    playNoteSequence(0, 0);
-  };
-  
-  // Recursive function to play through the notes sequence
-  const playNoteSequence = (trebleIndex: number, bassIndex: number) => {
-    // Play current treble note
+    // Start playing initial notes
     if (mode === "right" || mode === "both") {
-      const currentTrebleNote = trebleNotes[trebleIndex].key;
+      const currentTrebleNote = trebleNotes[0].key;
       if (Array.isArray(currentTrebleNote)) {
         currentTrebleNote.forEach(note => {
           handleKeyDown(note.replaceAll("/", "").toUpperCase());
@@ -124,9 +118,8 @@ export function MusicNotes({
       }
     }
     
-    // Play current bass note
     if (mode === "left" || mode === "both") {
-      const currentBassNote = bassNotes[bassIndex].key;
+      const currentBassNote = bassNotes[0].key;
       if (Array.isArray(currentBassNote)) {
         currentBassNote.forEach(note => {
           handleKeyDown(note.replaceAll("/", "").toUpperCase());
@@ -134,36 +127,6 @@ export function MusicNotes({
       } else {
         handleKeyDown(currentBassNote.replaceAll("/", "").toUpperCase());
       }
-    }
-    
-    // Update highlighted indices
-    setHighlightedTrebleIndex(trebleIndex);
-    setHighlightedBassIndex(bassIndex);
-    
-    // Calculate the next indices
-    const nextTrebleIndex = (trebleIndex + 1) % trebleNotes.length;
-    const nextBassIndex = (bassIndex + 1) % bassNotes.length;
-    
-    // Calculate the delay for the next note based on the current tempo and note duration
-    const trebleDelay = (60000 / currentTempo) * getBeats(trebleNotes[trebleIndex].duration);
-    const bassDelay = (60000 / currentTempo) * getBeats(bassNotes[bassIndex].duration);
-    
-    // Use the shortest delay if both hands are playing
-    const delay = mode === "both" ? Math.min(trebleDelay, bassDelay) : 
-                 mode === "right" ? trebleDelay : bassDelay;
-    
-    // Check if we've completed the sequence
-    if (nextTrebleIndex === 0 && nextBassIndex === 0) {
-      setTimeout(() => {
-        setIsDemoPlaying(false);
-        setHighlightedTrebleIndex(0);
-        setHighlightedBassIndex(0);
-      }, delay);
-    } else {
-      // Continue to the next note
-      setTimeout(() => {
-        playNoteSequence(nextTrebleIndex, nextBassIndex);
-      }, delay);
     }
   };
 
@@ -260,6 +223,70 @@ export function MusicNotes({
 
     return () => clearTimeout(timeoutId);
   }, [isPlaying, highlightedBassIndex, trebleNotes, currentTempo]);
+
+  // Handle treble clef demo playback
+  useEffect(() => {
+    if (!isDemoPlaying) return;
+    if (mode !== "right" && mode !== "both") return;
+
+    const handleTrebleNote = () => {
+      const nextTrebleIndex = (highlightedTrebleIndex + 1) % trebleNotes.length;
+      const nextTrebleNote = trebleNotes[nextTrebleIndex].key;
+      
+      if (Array.isArray(nextTrebleNote)) {
+        nextTrebleNote.forEach(note => {
+          handleKeyDown(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        handleKeyDown(nextTrebleNote.replaceAll("/", "").toUpperCase());
+      }
+
+      setHighlightedTrebleIndex(nextTrebleIndex);
+      
+      // End demo if both clefs have completed their cycles
+      if (nextTrebleIndex === 0 && 
+          (mode === "right" || (mode === "both" && highlightedBassIndex === 0))) {
+        setIsDemoPlaying(false);
+      }
+    };
+
+    const trebleInterval = (60000 / currentTempo) * getBeats(trebleNotes[highlightedTrebleIndex].duration);
+    const timeoutId = setTimeout(handleTrebleNote, trebleInterval);
+
+    return () => clearTimeout(timeoutId);
+  }, [isDemoPlaying, highlightedTrebleIndex, mode, currentTempo]);
+
+  // Handle bass clef demo playback
+  useEffect(() => {
+    if (!isDemoPlaying) return;
+    if (mode !== "left" && mode !== "both") return;
+
+    const handleBassNote = () => {
+      const nextBassIndex = (highlightedBassIndex + 1) % bassNotes.length;
+      const nextBassNote = bassNotes[nextBassIndex].key;
+      
+      if (Array.isArray(nextBassNote)) {
+        nextBassNote.forEach(note => {
+          handleKeyDown(note.replaceAll("/", "").toUpperCase());
+        });
+      } else {
+        handleKeyDown(nextBassNote.replaceAll("/", "").toUpperCase());
+      }
+
+      setHighlightedBassIndex(nextBassIndex);
+      
+      // End demo if both clefs have completed their cycles
+      if (nextBassIndex === 0 && 
+          (mode === "left" || (mode === "both" && highlightedTrebleIndex === 0))) {
+        setIsDemoPlaying(false);
+      }
+    };
+
+    const bassInterval = (60000 / currentTempo) * getBeats(bassNotes[highlightedBassIndex].duration);
+    const timeoutId = setTimeout(handleBassNote, bassInterval);
+
+    return () => clearTimeout(timeoutId);
+  }, [isDemoPlaying, highlightedBassIndex, mode, currentTempo]);
 
   // Initialize VexFlow factory once
   useEffect(() => {
